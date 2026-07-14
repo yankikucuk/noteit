@@ -91,10 +91,12 @@ linux:
       StartupWMClass: NoteIt
 
 # --- Auto-update publishing ---
-# electron-updater reads this provider. Replace with your real host (github,
-# generic, s3, …). Left as a generic placeholder: update checks fail silently
-# until a valid provider/URL is configured, and `--publish never` (used by the
-# build scripts) never uploads.
+# Update metadata (latest*.yml) and the packaged app's updater both target the
+# public GitHub releases of this repo. The release workflow attaches the
+# installers to the release, so electron-updater can check and download updates
+# from there. `--publish never` (used by the build scripts) still generates the
+# metadata locally without uploading.
 publish:
-  provider: generic
-  url: https://example.com/noteit/updates
+  provider: github
+  owner: yankikucuk
+  repo: noteit
