@@ -1,0 +1,52 @@
+name: Release
+
+# Builds native installers for all three platforms. Each job runs on its own OS
+# so better-sqlite3 is compiled for that platform (cross-building a native module
+# from a single machine is not reliable). Trigger by pushing a `v*` tag or from
+# the Actions tab (workflow_dispatch).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Package (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            script: build:mac
+          - os: windows-latest
+            script: build:win
+          - os: ubuntu-latest
+            script: build:linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Full install (with scripts) so postinstall rebuilds better-sqlite3 for
+      # this runner's OS/arch and Electron ABI.
+      - run: npm ci --legacy-peer-deps
+      - name: Build installers
+        run: npm run ${{ matrix.script }}
+        env:
+          # Unsigned build: do not search for signing certificates (would fail
+          # or hang on CI). Provide real certs/secrets here to sign.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: noteit-${{ matrix.os }}
+          if-no-files-found: ignore
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml

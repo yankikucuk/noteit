@@ -1,0 +1,6 @@
+# Used by electron-updater only when running an unpackaged (dev) build. The
+# packaged app uses the auto-generated app-update.yml instead. Point this at your
+# real update host to test the update flow locally.
+provider: generic
+url: https://example.com/noteit/updates
+updaterCacheDirName: noteit-updater

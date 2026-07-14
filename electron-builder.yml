@@ -1,0 +1,100 @@
+appId: com.noteit.app
+productName: NoteIt
+copyright: Copyright © 2026 NoteIt
+
+directories:
+  buildResources: build
+  output: dist
+
+# All-negation list => everything is included except these. Keeps `out/**`,
+# `resources/**`, `package.json` and production `node_modules` in the package.
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!test/*'
+  - '!scripts/*'
+  - '!.github/*'
+  - '!.nvmrc'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{eslint.config.js,vitest.config.js,.prettierrc.json,.prettierignore,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml,package-lock.json}'
+
+# better-sqlite3 is a native module and must live outside the asar to load.
+asarUnpack:
+  - '**/node_modules/better-sqlite3/**'
+
+# Rebuild native modules against the packaging target's Electron ABI. Combined
+# with per-OS CI runners (see .github/workflows/release.yml) this yields a
+# correct better-sqlite3 for each platform/arch.
+npmRebuild: true
+
+# Shared installer/artifact naming, e.g. "NoteIt-0.1.0-arm64.dmg".
+artifactName: ${productName}-${version}-${arch}.${ext}
+
+mac:
+  target:
+    - target: dmg
+      arch: [arm64]
+    - target: zip # required by electron-updater for macOS auto-update
+      arch: [arm64]
+  category: public.app-category.productivity
+  darkModeSupport: true
+  # --- Code signing & notarization ---
+  # hardenedRuntime + entitlements are required for notarization. To sign &
+  # notarize, provide a "Developer ID Application" certificate (login keychain or
+  # CSC_LINK/CSC_KEY_PASSWORD) and set APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and
+  # APPLE_TEAM_ID, then set `notarize: true`. Without them the build stays
+  # unsigned (CI sets CSC_IDENTITY_AUTO_DISCOVERY=false to skip signing cleanly).
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: false
+
+dmg:
+  # Standard drag-to-Applications layout.
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # --- Code signing (Windows) ---
+  # Provide a certificate via CSC_LINK (path/base64 of .pfx) + CSC_KEY_PASSWORD to
+  # avoid SmartScreen warnings. Unsigned otherwise.
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: NoteIt
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  maintainer: NoteIt <noteit@example.com>
+  synopsis: Sticky notes for your desktop
+  description: Frameless sticky notes backed by a local SQLite database.
+  executableName: noteit
+  desktop:
+    entry:
+      StartupWMClass: NoteIt
+
+# --- Auto-update publishing ---
+# electron-updater reads this provider. Replace with your real host (github,
+# generic, s3, …). Left as a generic placeholder: update checks fail silently
+# until a valid provider/URL is configured, and `--publish never` (used by the
+# build scripts) never uploads.
+publish:
+  provider: generic
+  url: https://example.com/noteit/updates

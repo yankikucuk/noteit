@@ -1,0 +1,264 @@
+/** English translations. Keys are shared with every other locale file. */
+export default {
+  // Tray menu
+  'tray.newNote': 'New Note',
+  'tray.newFromClipboard': 'New Note from Clipboard',
+  'tray.explorer': 'Note Explorer…',
+  'tray.showAll': 'Show All Notes',
+  'tray.hideAll': 'Hide All Notes',
+  'tray.settings': 'Settings…',
+  'tray.quit': 'Quit',
+  'tray.tooltip': 'NoteIt — Sticky Notes',
+
+  // Application menu
+  'menu.about': 'About NoteIt',
+  'menu.settings': 'Settings…',
+  'menu.hide': 'Hide',
+  'menu.hideOthers': 'Hide Others',
+  'menu.quit': 'Quit',
+  'menu.file': 'File',
+  'menu.newNote': 'New Note',
+  'menu.explorer': 'Note Explorer',
+  'menu.edit': 'Edit',
+  'menu.undo': 'Undo',
+  'menu.redo': 'Redo',
+  'menu.cut': 'Cut',
+  'menu.copy': 'Copy',
+  'menu.paste': 'Paste',
+  'menu.selectAll': 'Select All',
+  'menu.view': 'View',
+  'menu.fullscreen': 'Toggle Full Screen',
+  'menu.devtools': 'Developer Tools',
+  'menu.window': 'Window',
+
+  // Note window
+  'note.new': 'New note',
+  'note.options': 'Options',
+  'note.close': 'Close',
+  'note.collapse': 'Collapse to title',
+  'note.expand': 'Expand',
+  'note.empty': 'Empty note',
+  'note.addTag': 'Add tag',
+
+  // Formatting menu
+  'format.bold': 'Bold',
+  'format.italic': 'Italic',
+  'format.underline': 'Underline',
+  'format.strike': 'Strikethrough',
+  'format.highlight': 'Highlight',
+  'format.bulletList': 'Bullet list',
+  'format.orderedList': 'Numbered list',
+  'format.taskList': 'Checklist',
+  'format.link': 'Link',
+  'format.date': 'Insert date',
+  'format.clear': 'Clear formatting',
+  'format.linkPrompt': 'Link URL:',
+
+  // Options menu
+  'options.opacity': 'Opacity',
+  'options.alwaysOnTop': 'Always on top',
+  'options.lock': 'Lock note',
+  'options.star': 'Star',
+  'options.reminder': 'Reminder',
+  'options.history': 'History',
+  'options.duplicate': 'Duplicate',
+  'options.explorer': 'Note Explorer',
+  'options.export': 'Export',
+  'options.trash': 'Move to trash',
+
+  // Version history
+  'history.title': 'Version history',
+  'history.empty': 'No earlier versions yet',
+  'history.restore': 'Restore',
+  'history.close': 'Close',
+
+  // Rich formatting
+  'format.code': 'Inline code',
+  'format.codeBlock': 'Code block',
+  'format.image': 'Insert image',
+  'format.imagePrompt': 'Image URL:',
+  'format.table': 'Insert table',
+
+  // Alarm dialog
+  'alarm.title': 'Reminder',
+  'alarm.date': 'Date',
+  'alarm.time': 'Time',
+  'alarm.repeat': 'Repeat',
+  'alarm.once': 'Once',
+  'alarm.daily': 'Daily',
+  'alarm.weekly': 'Weekly',
+  'alarm.monthly': 'Monthly',
+  'alarm.yearly': 'Yearly',
+  'alarm.remove': 'Remove',
+  'alarm.cancel': 'Cancel',
+  'alarm.save': 'Save',
+
+  // Tags
+  'tag.searchOrCreate': 'Search or create a tag…',
+  'tag.create': 'Create “{name}”',
+  'tag.empty': 'No tags',
+  'tag.remove': 'Remove',
+
+  // Categories & default profile
+  'category.default': 'General',
+  'profile.default': 'General',
+  'category.newPrompt': 'New category name:',
+  'category.renamePrompt': 'Category name:',
+  'category.deleteConfirm': 'Delete category “{name}”? Its notes move to another category.',
+  'category.hint': 'Double-click: rename · Right-click: delete',
+  'category.new': 'New category',
+
+  // Explorer
+  'explorer.notes': 'Notes',
+  'explorer.trash': 'Trash',
+  'explorer.search': 'Search notes…',
+  'explorer.sortUpdated': 'Modified',
+  'explorer.sortCreated': 'Created',
+  'explorer.sortText': 'Text',
+  'explorer.sortStarred': 'Starred',
+  'explorer.sortDirection': 'Sort direction',
+  'explorer.all': 'All',
+  'explorer.selected': '{count} notes selected',
+  'explorer.merge': 'Merge',
+  'explorer.cancelSelection': 'Cancel',
+  'explorer.emptyNotes': 'No notes yet',
+  'explorer.emptyTrash': 'Trash is empty',
+  'explorer.firstNote': 'Create your first note',
+  'explorer.open': 'Open',
+  'explorer.star': 'Star',
+  'explorer.toTrash': 'Move to trash',
+  'explorer.restore': 'Restore',
+  'explorer.deleteForever': 'Delete permanently',
+  'explorer.lockAll': 'Lock all',
+  'explorer.locked': 'Locked',
+  'explorer.lockAllTitle': 'Lock all notes',
+  'explorer.unlockAllTitle': 'Unlock all notes',
+  'explorer.backup': 'Back up',
+  'explorer.restoreBtn': 'Restore',
+  'explorer.emptyTrashBtn': 'Empty trash',
+  'explorer.noteCount': '{count} notes',
+  'explorer.newNote': 'New note',
+  'explorer.close': 'Close',
+  'explorer.switchProfile': 'Switch profile',
+  'explorer.deleteNoteConfirm': 'Permanently delete this note?',
+  'explorer.emptyTrashConfirm': 'Empty the trash completely?',
+
+  // Profiles
+  'profile.title': 'Profiles',
+  'profile.new': 'New profile',
+  'profile.name': 'Profile name',
+  'profile.passwordOptional': 'Password (optional)',
+  'profile.createAndSwitch': 'Create and switch',
+  'profile.locked': 'This profile is password-protected',
+  'profile.password': 'Password',
+  'profile.unlock': 'Unlock',
+  'profile.wrongPassword': 'Wrong password',
+  'profile.switchFailed': 'Switch failed',
+  'profile.rename': 'Rename',
+  'profile.setPassword': 'Set password',
+  'profile.changePassword': 'Change password',
+  'profile.newPasswordPlaceholder': 'New password (empty = remove)',
+  'profile.savePassword': 'Save password',
+  'profile.delete': 'Delete profile',
+  'profile.lastCantDelete': 'Cannot delete the last profile',
+  'profile.settings': 'Settings',
+  'profile.renamePrompt': 'Profile name:',
+  'profile.deleteConfirm': 'Permanently delete profile “{name}” and ALL its notes?',
+
+  // Settings
+  'settings.title': 'Settings',
+  'settings.general': 'General',
+  'settings.language': 'Language',
+  'settings.launchAtLogin': 'Launch at login',
+  'settings.launchAtLoginDesc': 'Start NoteIt automatically at login',
+  'settings.defaultColor': 'Default note color',
+  'settings.backup': 'Backup',
+  'settings.backupHint': 'The app backs up daily (last 7 kept). You can also back up manually.',
+  'settings.createBackup': 'Create Backup',
+  'settings.restore': 'Restore',
+  'settings.dataFolder': 'Data Folder',
+  'settings.data': 'Notes Data',
+  'settings.dataHint': 'Export your notes to a portable JSON file, or import notes from one.',
+  'settings.exportData': 'Export Notes',
+  'settings.importData': 'Import Notes',
+  'settings.checkUpdates': 'Check for Updates',
+  'settings.about': 'About',
+  'settings.version': 'Version {version}',
+  'settings.close': 'Close',
+
+  // Main-process dialogs
+  'dialog.backupTitle': 'Create Backup',
+  'dialog.backupFilter': 'NoteIt Backup',
+  'dialog.restoreTitle': 'Restore from Backup',
+  'dialog.cancel': 'Cancel',
+  'dialog.restoreConfirm': 'Restore and Restart',
+  'dialog.restoreMessage': 'All current notes will be replaced by this backup. Continue?',
+  'dialog.restoreInvalidTitle': 'Invalid backup',
+  'dialog.restoreInvalid': 'This file is not a valid NoteIt backup and was not restored.',
+  'dialog.exportTitle': 'Export Note',
+  'dialog.exportDataTitle': 'Export Notes',
+  'dialog.importDataTitle': 'Import Notes',
+  'dialog.dataFilter': 'NoteIt Notes (JSON)',
+  'dialog.importInvalidTitle': 'Invalid file',
+  'dialog.importInvalid': 'This file is not a valid NoteIt notes export.',
+
+  // Auto-update
+  'update.downloadedTitle': 'Update ready',
+  'update.downloadedMessage': 'NoteIt {version} has been downloaded. Restart to install it now?',
+  'update.restartNow': 'Restart now',
+  'update.later': 'Later',
+  'update.checking': 'Checking for updates…',
+  'update.available': 'Update found — downloading…',
+  'update.none': 'You’re on the latest version',
+  'update.checkFailed': 'Could not check for updates',
+
+  // Toast notifications
+  'toast.backupCreated': 'Backup created',
+  'toast.exported': '{count} notes exported',
+  'toast.imported': '{count} notes imported',
+  'toast.versionRestored': 'Note restored to an earlier version',
+  'toast.error': 'Something went wrong',
+
+  // Notifications
+  'notify.reminderTitle': 'NoteIt Reminder',
+  'notify.reminderBody': 'Note reminder',
+
+  // Note colors
+  'color.yellow': 'Yellow',
+  'color.green': 'Green',
+  'color.pink': 'Pink',
+  'color.blue': 'Blue',
+  'color.purple': 'Purple',
+  'color.orange': 'Orange',
+  'color.teal': 'Teal',
+  'color.white': 'White',
+  'color.gray': 'Grey',
+  'color.charcoal': 'Charcoal',
+
+  // Tag colors
+  'tagColor.slate': 'Grey',
+  'tagColor.red': 'Red',
+  'tagColor.orange': 'Orange',
+  'tagColor.amber': 'Amber',
+  'tagColor.green': 'Green',
+  'tagColor.teal': 'Teal',
+  'tagColor.blue': 'Blue',
+  'tagColor.violet': 'Violet',
+  'tagColor.pink': 'Pink',
+
+  // Editor
+  'editor.placeholder': 'Write a note…',
+
+  // Window titles
+  'window.explorer': 'NoteIt',
+  'window.settings': 'NoteIt Settings',
+
+  // First-run welcome note
+  'welcome.html':
+    '<h3>Welcome to NoteIt 👋</h3>' +
+    '<p>This is a <strong>sticky note</strong>. Just start typing here.</p>' +
+    '<ul data-type="taskList"><li data-type="taskItem" data-checked="false">Add a task</li>' +
+    '<li data-type="taskItem" data-checked="true">Check the box</li></ul>' +
+    '<p>Use <em>+</em> in the title bar for a new note, and <em>⋯</em> for color and options.</p>',
+  'welcome.plain': 'Welcome to NoteIt. This is a sticky note.'
+}

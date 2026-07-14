@@ -1,0 +1,267 @@
+/** Turkish translations. Keys are shared with every other locale file. */
+export default {
+  // Tray menu
+  'tray.newNote': 'Yeni Not',
+  'tray.newFromClipboard': 'Panodan Yeni Not',
+  'tray.explorer': 'Not Gezgini…',
+  'tray.showAll': 'Tüm Notları Göster',
+  'tray.hideAll': 'Tüm Notları Gizle',
+  'tray.settings': 'Ayarlar…',
+  'tray.quit': 'Çıkış',
+  'tray.tooltip': 'NoteIt — Yapışkan Notlar',
+
+  // Application menu
+  'menu.about': 'NoteIt Hakkında',
+  'menu.settings': 'Ayarlar…',
+  'menu.hide': 'Gizle',
+  'menu.hideOthers': 'Diğerlerini Gizle',
+  'menu.quit': 'Çıkış',
+  'menu.file': 'Dosya',
+  'menu.newNote': 'Yeni Not',
+  'menu.explorer': 'Not Gezgini',
+  'menu.edit': 'Düzenle',
+  'menu.undo': 'Geri Al',
+  'menu.redo': 'Yinele',
+  'menu.cut': 'Kes',
+  'menu.copy': 'Kopyala',
+  'menu.paste': 'Yapıştır',
+  'menu.selectAll': 'Tümünü Seç',
+  'menu.view': 'Görünüm',
+  'menu.fullscreen': 'Tam Ekran',
+  'menu.devtools': 'Geliştirici Araçları',
+  'menu.window': 'Pencere',
+
+  // Note window
+  'note.new': 'Yeni not',
+  'note.options': 'Seçenekler',
+  'note.close': 'Kapat',
+  'note.collapse': 'Başlığa daralt',
+  'note.expand': 'Genişlet',
+  'note.empty': 'Boş not',
+  'note.addTag': 'Etiket ekle',
+
+  // Formatting menu
+  'format.bold': 'Kalın',
+  'format.italic': 'İtalik',
+  'format.underline': 'Altı çizili',
+  'format.strike': 'Üstü çizili',
+  'format.highlight': 'Vurgula',
+  'format.bulletList': 'Madde listesi',
+  'format.orderedList': 'Numaralı liste',
+  'format.taskList': 'Onay kutulu liste',
+  'format.link': 'Bağlantı',
+  'format.date': 'Tarih ekle',
+  'format.clear': 'Biçimi temizle',
+  'format.linkPrompt': 'Bağlantı adresi:',
+
+  // Options menu
+  'options.opacity': 'Opaklık',
+  'options.alwaysOnTop': 'Her zaman üstte',
+  'options.lock': 'Notu kilitle',
+  'options.star': 'Yıldızla',
+  'options.reminder': 'Hatırlatıcı',
+  'options.history': 'Geçmiş',
+  'options.duplicate': 'Çoğalt',
+  'options.explorer': 'Not Gezgini',
+  'options.export': 'Dışa aktar',
+  'options.trash': 'Çöpe taşı',
+
+  // Version history
+  'history.title': 'Sürüm geçmişi',
+  'history.empty': 'Henüz eski sürüm yok',
+  'history.restore': 'Geri yükle',
+  'history.close': 'Kapat',
+
+  // Rich formatting
+  'format.code': 'Satır içi kod',
+  'format.codeBlock': 'Kod bloğu',
+  'format.image': 'Görsel ekle',
+  'format.imagePrompt': 'Görsel adresi:',
+  'format.table': 'Tablo ekle',
+
+  // Alarm dialog
+  'alarm.title': 'Hatırlatıcı',
+  'alarm.date': 'Tarih',
+  'alarm.time': 'Saat',
+  'alarm.repeat': 'Tekrar',
+  'alarm.once': 'Bir kez',
+  'alarm.daily': 'Her gün',
+  'alarm.weekly': 'Her hafta',
+  'alarm.monthly': 'Her ay',
+  'alarm.yearly': 'Her yıl',
+  'alarm.remove': 'Kaldır',
+  'alarm.cancel': 'İptal',
+  'alarm.save': 'Kaydet',
+
+  // Tags
+  'tag.searchOrCreate': 'Etiket ara veya oluştur…',
+  'tag.create': '“{name}” oluştur',
+  'tag.empty': 'Etiket yok',
+  'tag.remove': 'Kaldır',
+
+  // Categories & default profile
+  'category.default': 'Genel',
+  'profile.default': 'Genel',
+  'category.newPrompt': 'Yeni kategori adı:',
+  'category.renamePrompt': 'Kategori adı:',
+  'category.deleteConfirm': '“{name}” kategorisi silinsin mi? Notlar başka kategoriye taşınır.',
+  'category.hint': 'Çift tık: yeniden adlandır · Sağ tık: sil',
+  'category.new': 'Yeni kategori',
+
+  // Explorer
+  'explorer.notes': 'Notlar',
+  'explorer.trash': 'Çöp',
+  'explorer.search': 'Notlarda ara…',
+  'explorer.sortUpdated': 'Değiştirilme',
+  'explorer.sortCreated': 'Oluşturulma',
+  'explorer.sortText': 'Metin',
+  'explorer.sortStarred': 'Yıldız',
+  'explorer.sortDirection': 'Sıralama yönü',
+  'explorer.all': 'Tümü',
+  'explorer.selected': '{count} not seçili',
+  'explorer.merge': 'Birleştir',
+  'explorer.cancelSelection': 'Vazgeç',
+  'explorer.emptyNotes': 'Henüz not yok',
+  'explorer.emptyTrash': 'Çöp kutusu boş',
+  'explorer.firstNote': 'İlk notunu oluştur',
+  'explorer.open': 'Aç',
+  'explorer.star': 'Yıldız',
+  'explorer.toTrash': 'Çöpe taşı',
+  'explorer.restore': 'Geri yükle',
+  'explorer.deleteForever': 'Kalıcı sil',
+  'explorer.lockAll': 'Tümünü kilitle',
+  'explorer.locked': 'Kilitli',
+  'explorer.lockAllTitle': 'Tüm notları kilitle',
+  'explorer.unlockAllTitle': 'Tüm notların kilidini aç',
+  'explorer.backup': 'Yedekle',
+  'explorer.restoreBtn': 'Geri yükle',
+  'explorer.emptyTrashBtn': 'Çöpü boşalt',
+  'explorer.noteCount': '{count} not',
+  'explorer.newNote': 'Yeni not',
+  'explorer.close': 'Kapat',
+  'explorer.switchProfile': 'Profili değiştir',
+  'explorer.deleteNoteConfirm': 'Bu not kalıcı olarak silinsin mi?',
+  'explorer.emptyTrashConfirm': 'Çöp kutusu tamamen boşaltılsın mı?',
+
+  // Profiles
+  'profile.title': 'Profiller',
+  'profile.new': 'Yeni profil',
+  'profile.name': 'Profil adı',
+  'profile.passwordOptional': 'Şifre (opsiyonel)',
+  'profile.createAndSwitch': 'Oluştur ve geç',
+  'profile.locked': 'Bu profil şifreli',
+  'profile.password': 'Şifre',
+  'profile.unlock': 'Aç',
+  'profile.wrongPassword': 'Yanlış şifre',
+  'profile.switchFailed': 'Geçiş başarısız',
+  'profile.rename': 'Yeniden adlandır',
+  'profile.setPassword': 'Şifre belirle',
+  'profile.changePassword': 'Şifreyi değiştir',
+  'profile.newPasswordPlaceholder': 'Yeni şifre (boş = kaldır)',
+  'profile.savePassword': 'Şifreyi kaydet',
+  'profile.delete': 'Profili sil',
+  'profile.lastCantDelete': 'Son profil silinemez',
+  'profile.settings': 'Ayarlar',
+  'profile.renamePrompt': 'Profil adı:',
+  'profile.deleteConfirm': '“{name}” profili ve TÜM notları kalıcı olarak silinsin mi?',
+
+  // Settings
+  'settings.title': 'Ayarlar',
+  'settings.general': 'Genel',
+  'settings.language': 'Dil',
+  'settings.launchAtLogin': 'Sistemle başlat',
+  'settings.launchAtLoginDesc': 'NoteIt oturum açıldığında otomatik başlasın',
+  'settings.defaultColor': 'Varsayılan not rengi',
+  'settings.backup': 'Yedekleme',
+  'settings.backupHint':
+    'Uygulama her gün otomatik yedek alır (son 7 tutulur). Elle de yedek alabilirsiniz.',
+  'settings.createBackup': 'Yedek Oluştur',
+  'settings.restore': 'Geri Yükle',
+  'settings.dataFolder': 'Veri Klasörü',
+  'settings.data': 'Not Verileri',
+  'settings.dataHint':
+    'Notlarını taşınabilir bir JSON dosyasına aktar veya bir dosyadan içe aktar.',
+  'settings.exportData': 'Notları Dışa Aktar',
+  'settings.importData': 'Notları İçe Aktar',
+  'settings.checkUpdates': 'Güncellemeleri Denetle',
+  'settings.about': 'Hakkında',
+  'settings.version': 'Sürüm {version}',
+  'settings.close': 'Kapat',
+
+  // Main-process dialogs
+  'dialog.backupTitle': 'Yedek Oluştur',
+  'dialog.backupFilter': 'NoteIt Yedeği',
+  'dialog.restoreTitle': 'Yedekten Geri Yükle',
+  'dialog.cancel': 'İptal',
+  'dialog.restoreConfirm': 'Geri Yükle ve Yeniden Başlat',
+  'dialog.restoreMessage': 'Mevcut tüm notların bu yedekle değiştirilecek. Devam edilsin mi?',
+  'dialog.restoreInvalidTitle': 'Geçersiz yedek',
+  'dialog.restoreInvalid': 'Bu dosya geçerli bir NoteIt yedeği değil, geri yüklenmedi.',
+  'dialog.exportTitle': 'Notu Dışa Aktar',
+  'dialog.exportDataTitle': 'Notları Dışa Aktar',
+  'dialog.importDataTitle': 'Notları İçe Aktar',
+  'dialog.dataFilter': 'NoteIt Notları (JSON)',
+  'dialog.importInvalidTitle': 'Geçersiz dosya',
+  'dialog.importInvalid': 'Bu dosya geçerli bir NoteIt not dışa aktarımı değil.',
+
+  // Auto-update
+  'update.downloadedTitle': 'Güncelleme hazır',
+  'update.downloadedMessage':
+    'NoteIt {version} indirildi. Şimdi kurmak için yeniden başlatılsın mı?',
+  'update.restartNow': 'Şimdi yeniden başlat',
+  'update.later': 'Sonra',
+  'update.checking': 'Güncellemeler denetleniyor…',
+  'update.available': 'Güncelleme bulundu — indiriliyor…',
+  'update.none': 'En son sürümü kullanıyorsun',
+  'update.checkFailed': 'Güncellemeler denetlenemedi',
+
+  // Toast notifications
+  'toast.backupCreated': 'Yedek oluşturuldu',
+  'toast.exported': '{count} not dışa aktarıldı',
+  'toast.imported': '{count} not içe aktarıldı',
+  'toast.versionRestored': 'Not önceki bir sürüme geri yüklendi',
+  'toast.error': 'Bir şeyler ters gitti',
+
+  // Notifications
+  'notify.reminderTitle': 'NoteIt Hatırlatıcı',
+  'notify.reminderBody': 'Not hatırlatıcısı',
+
+  // Note colors
+  'color.yellow': 'Sarı',
+  'color.green': 'Yeşil',
+  'color.pink': 'Pembe',
+  'color.blue': 'Mavi',
+  'color.purple': 'Mor',
+  'color.orange': 'Turuncu',
+  'color.teal': 'Turkuaz',
+  'color.white': 'Beyaz',
+  'color.gray': 'Gri',
+  'color.charcoal': 'Antrasit',
+
+  // Tag colors
+  'tagColor.slate': 'Gri',
+  'tagColor.red': 'Kırmızı',
+  'tagColor.orange': 'Turuncu',
+  'tagColor.amber': 'Kehribar',
+  'tagColor.green': 'Yeşil',
+  'tagColor.teal': 'Turkuaz',
+  'tagColor.blue': 'Mavi',
+  'tagColor.violet': 'Mor',
+  'tagColor.pink': 'Pembe',
+
+  // Editor
+  'editor.placeholder': 'Not yaz…',
+
+  // Window titles
+  'window.explorer': 'NoteIt',
+  'window.settings': 'NoteIt Ayarları',
+
+  // First-run welcome note
+  'welcome.html':
+    "<h3>NoteIt'e hoş geldin 👋</h3>" +
+    '<p>Bu bir <strong>yapışkan not</strong>. Doğrudan buraya yazmaya başla.</p>' +
+    '<ul data-type="taskList"><li data-type="taskItem" data-checked="false">Bir görev ekle</li>' +
+    '<li data-type="taskItem" data-checked="true">Kutuyu işaretle</li></ul>' +
+    '<p>Üst çubuktaki <em>+</em> ile yeni not, <em>⋯</em> ile renk ve seçenekleri aç.</p>',
+  'welcome.plain': 'NoteIte hoş geldin. Bu bir yapışkan not.'
+}

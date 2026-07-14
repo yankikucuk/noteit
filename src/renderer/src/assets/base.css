@@ -1,0 +1,285 @@
+:root {
+  /* Radii */
+  --r-xs: 5px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.1);
+  --shadow-pop: 0 10px 34px rgba(0, 0, 0, 0.24), 0 3px 10px rgba(0, 0, 0, 0.12);
+
+  /* Motion */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 0.16s;
+
+  /* Interaction highlights (not note-specific) */
+  --hover: rgba(0, 0, 0, 0.06);
+  --hover-strong: rgba(0, 0, 0, 0.11);
+
+  /* Explorer neutral palette (light) */
+  --x-bg: #f4f5f7;
+  --x-surface: #ffffff;
+  --x-surface-2: #fafbfc;
+  --x-border: #eaecef;
+  --x-text: #1f2226;
+  --x-text-dim: #767b83;
+  --x-text-faint: #a2a7ae;
+  --x-brand: #f0b400;
+  --x-accent: #3d7eff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+  cursor: default;
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Draggable / clickable regions (frameless window) */
+.drag {
+  -webkit-app-region: drag;
+}
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* --- Thin scrollbars --- */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.26);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- TipTap / ProseMirror content area --- */
+.ProseMirror {
+  outline: none;
+  user-select: text;
+  cursor: text;
+  min-height: 100%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  -webkit-user-select: text;
+}
+.ProseMirror > * + * {
+  margin-top: 0.5em;
+}
+.ProseMirror p {
+  margin: 0;
+}
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3 {
+  margin: 0.25em 0 0.1em;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.ProseMirror h1 {
+  font-size: 1.45em;
+}
+.ProseMirror h2 {
+  font-size: 1.25em;
+}
+.ProseMirror h3 {
+  font-size: 1.1em;
+}
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.25em;
+  margin: 0.2em 0;
+}
+.ProseMirror li {
+  margin: 0.1em 0;
+}
+.ProseMirror blockquote {
+  border-left: 2.5px solid currentColor;
+  opacity: 0.9;
+  padding-left: 0.8em;
+  margin: 0.35em 0;
+  font-style: italic;
+}
+.ProseMirror a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.ProseMirror code {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.88em;
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+.ProseMirror hr {
+  border: none;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.16);
+  margin: 0.7em 0;
+}
+.ProseMirror mark {
+  border-radius: 3px;
+  padding: 0.05em 2px;
+  box-decoration-break: clone;
+}
+.ProseMirror pre {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  margin: 0.4em 0;
+  overflow-x: auto;
+  font-size: 0.85em;
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  white-space: pre;
+}
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+  margin: 0.3em 0;
+}
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid var(--accent, #3d7eff);
+}
+
+/* Tables */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.4em 0;
+  overflow: hidden;
+  font-size: 0.92em;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  padding: 4px 7px;
+  min-width: 2em;
+  vertical-align: top;
+  text-align: left;
+}
+.ProseMirror th {
+  background: rgba(0, 0, 0, 0.06);
+  font-weight: 650;
+}
+.ProseMirror .selectedCell {
+  background: rgba(61, 126, 255, 0.14);
+}
+
+/* Placeholder for empty content */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  opacity: 0.4;
+  font-style: italic;
+  pointer-events: none;
+  height: 0;
+}
+
+/* --- Task list (checklist) --- */
+ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.1em;
+  margin: 0.2em 0;
+}
+ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin: 0.2em 0;
+}
+ul[data-type='taskList'] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.12em;
+  user-select: none;
+}
+ul[data-type='taskList'] li > div {
+  flex: 1 1 auto;
+}
+ul[data-type='taskList'] input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.7px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.6;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--dur) var(--ease);
+  vertical-align: middle;
+}
+ul[data-type='taskList'] input[type='checkbox']:checked {
+  background: currentColor;
+  opacity: 0.9;
+}
+ul[data-type='taskList'] input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 4.2px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--bg, #fff);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+ul[data-type='taskList'] li[data-checked='true'] > div {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+/* Shared: focus/visibility transitions */
+.fade-in {
+  animation: fadeIn var(--dur) var(--ease);
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

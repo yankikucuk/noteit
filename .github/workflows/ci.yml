@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Lint & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Skip the electron-builder rebuild that postinstall would trigger...
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      # ...but build better-sqlite3 against Node so the DB integration tests run
+      # here (they auto-skip on machines where it is built for Electron).
+      - run: npm rebuild better-sqlite3
+      - run: npm run lint
+      - run: npm test
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      # electron-vite treats better-sqlite3/electron as external, so bundling the
+      # main/preload/renderer code does not require the native rebuild.
+      - run: npm run build
