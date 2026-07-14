@@ -40,7 +40,7 @@ Built with **Electron + Vue 3 + better-sqlite3 + TipTap**. Runs on macOS
 
 ## Development
 
-Requires **Node ≥ 20.19** (see `.nvmrc` / `engines`).
+Requires **Node 26** (see `.nvmrc` / `engines`).
 
 ```bash
 npm install        # installs deps and rebuilds better-sqlite3 for Electron
@@ -74,11 +74,17 @@ Windows and Linux for every push and pull request.
 ## Building
 
 ```bash
-npm run build:mac    # → dist/*.dmg + *.zip (arm64)
-npm run build:win    # → dist/*.exe (nsis, x64)
-npm run build:linux  # → dist/*.AppImage, *.deb
-npm run pack:dir     # unpacked app in dist/ (quick smoke test, no installer)
+npm run build:mac      # → dist/*.dmg + *.zip (arm64)
+npm run build:win      # → dist/*.exe (nsis, x64)
+npm run build:win-arm  # → dist/*.exe (nsis, arm64) — run on an arm64 Windows host
+npm run build:linux    # → dist/*.AppImage, *.deb (x64)
+npm run pack:dir       # unpacked app in dist/ (quick smoke test, no installer)
 ```
+
+> **64-bit only.** By design the app targets only 64-bit processors (arm64 / x64)
+> — no 32-bit (ia32 / armv7l) builds are produced. Windows ships both x64 and
+> arm64 installers; the arm64 one is built on a native `windows-11-arm` CI runner
+> so the native module compiles for arm64 without cross-compilation.
 
 Each script builds the renderer/main bundles (electron-vite) and then packages
 with electron-builder (`electron-builder.yml`).

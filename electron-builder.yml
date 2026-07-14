@@ -31,6 +31,9 @@ npmRebuild: true
 # Shared installer/artifact naming, e.g. "NoteIt-0.1.0-arm64.dmg".
 artifactName: ${productName}-${version}-${arch}.${ext}
 
+# Architecture policy (deliberate): 64-bit only. This app does not support 32-bit
+# processors, so every target below pins a 64-bit arch (arm64 / x64) and no
+# target ever builds ia32 or armv7l.
 mac:
   target:
     - target: dmg
@@ -64,7 +67,10 @@ dmg:
 win:
   target:
     - target: nsis
-      arch: [x64]
+      arch: [x64, arm64]
+  # x64 and arm64 are built on separate runners (a native arm64 Windows runner
+  # builds the arm64 installer); each build:win* script passes the matching arch
+  # flag, so neither runner cross-compiles the native module.
   # --- Code signing (Windows) ---
   # Provide a certificate via CSC_LINK (path/base64 of .pfx) + CSC_KEY_PASSWORD to
   # avoid SmartScreen warnings. Unsigned otherwise.
@@ -79,8 +85,10 @@ nsis:
 
 linux:
   target:
-    - AppImage
-    - deb
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
   category: Utility
   maintainer: NoteIt <noteit@example.com>
   synopsis: Sticky notes for your desktop

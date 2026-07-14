@@ -47,7 +47,9 @@ All notable changes to this project are documented here. The format is based on
   database/repository integration suite (runs against a Node build of
   better-sqlite3, auto-skips where it is built for Electron).
 - GitHub Actions CI: lint, full test suite, and multi-OS build.
-- Release workflow packages installers on macOS, Windows and Linux runners
-  (dmg + zip, nsis, AppImage + deb); native module rebuilt per platform.
-- `engines` / `.nvmrc` pin Node ≥ 20.19.
+- Release workflow packages installers on macOS, Windows (x64 and native arm64)
+  and Linux runners (dmg + zip, nsis x64 + arm64, AppImage + deb) and publishes
+  them to a GitHub Release; native module rebuilt per platform.
+- 64-bit only: all targets build arm64/x64 — no 32-bit (ia32/armv7l).
+- `engines` / `.nvmrc` pin Node 26.
 - English JSDoc across the codebase.

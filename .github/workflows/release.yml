@@ -21,8 +21,10 @@ jobs:
         include:
           - os: macos-latest
             script: build:mac
-          - os: windows-latest
+          - os: windows-latest # x64
             script: build:win
+          - os: windows-11-arm # native arm64 Windows runner (free on public repos)
+            script: build:win-arm
           - os: ubuntu-latest
             script: build:linux
     runs-on: ${{ matrix.os }}
@@ -30,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
       # Full install (with scripts) so postinstall rebuilds better-sqlite3 for
       # this runner's OS/arch and Electron ABI.

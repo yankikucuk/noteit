@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=20.19.0"
+    "node": "26.x"
   },
   "homepage": "https://github.com/your-org/noteit",
   "repository": {
@@ -26,7 +26,8 @@
     "make-assets": "node scripts/make-assets.mjs",
     "pack:dir": "electron-vite build && electron-builder --dir --publish never",
     "build:mac": "electron-vite build && electron-builder --mac --publish never",
-    "build:win": "electron-vite build && electron-builder --win --publish never",
+    "build:win": "electron-vite build && electron-builder --win --x64 --publish never",
+    "build:win-arm": "electron-vite build && electron-builder --win --arm64 --publish never",
     "build:linux": "electron-vite build && electron-builder --linux --publish never"
   },
   "dependencies": {
