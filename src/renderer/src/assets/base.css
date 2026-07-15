@@ -31,6 +31,36 @@
   --x-accent: #3d7eff;
 }
 
+/* Dark theme for the app chrome (Explorer, Settings, dialogs). A `data-theme`
+   attribute (set from the preference) wins; with no attribute the OS preference
+   applies. Note windows keep their own per-note colors. */
+:root[data-theme='dark'] {
+  --hover: rgba(255, 255, 255, 0.07);
+  --hover-strong: rgba(255, 255, 255, 0.13);
+  --x-bg: #1b1d21;
+  --x-surface: #26282d;
+  --x-surface-2: #2c2f35;
+  --x-border: #34373d;
+  --x-text: #e7e9ec;
+  --x-text-dim: #9aa1a9;
+  --x-text-faint: #6d747c;
+  --x-accent: #4a86ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --hover: rgba(255, 255, 255, 0.07);
+    --hover-strong: rgba(255, 255, 255, 0.13);
+    --x-bg: #1b1d21;
+    --x-surface: #26282d;
+    --x-surface-2: #2c2f35;
+    --x-border: #34373d;
+    --x-text: #e7e9ec;
+    --x-text-dim: #9aa1a9;
+    --x-text-faint: #6d747c;
+    --x-accent: #4a86ff;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -216,6 +216,41 @@ function persistBounds(noteId, win) {
 // Note windows
 // ---------------------------------------------------------------------------
 
+/** Cascade counter so successive new notes don't stack exactly. */
+let cascadeIndex = 0
+
+/**
+ * Computes a starting position for a new note (one without a saved position) on
+ * the display under the cursor, cascading slightly so notes don't overlap.
+ * @param {number} w - Window width.
+ * @param {number} h - Window height.
+ * @returns {{x: number, y: number}} Position on the active display.
+ */
+function activeDisplayPosition(w, h) {
+  const area = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea
+  const step = (cascadeIndex++ % 8) * 28
+  const x = area.x + Math.min(70 + step, Math.max(0, area.width - w - 20))
+  const y = area.y + Math.min(70 + step, Math.max(0, area.height - h - 20))
+  return { x, y }
+}
+
+/**
+ * Reduces a note window's opacity when it loses focus (and restores it on focus)
+ * if the "fade unfocused" preference is on, keeping the reduction relative to the
+ * note's own opacity.
+ * @param {number} noteId - Note id.
+ * @param {BrowserWindow} win - The note window.
+ */
+function bindFocusFade(noteId, win) {
+  const base = () => getNote(noteId)?.opacity ?? 1
+  win.on('blur', () => {
+    if (getSetting('fade_unfocused', false) && !win.isDestroyed()) win.setOpacity(base() * 0.7)
+  })
+  win.on('focus', () => {
+    if (!win.isDestroyed()) win.setOpacity(base())
+  })
+}
+
 /**
  * Creates a frameless note window and applies the note's persisted state
  * (size, position, opacity, always-on-top, locked, collapsed).
@@ -224,11 +259,15 @@ function persistBounds(noteId, win) {
  * @returns {BrowserWindow} The created window.
  */
 function createNoteWindow(note) {
+  const width = note.width || 260
+  const height = note.collapsed ? TITLEBAR_H : note.height || 280
+  const hasPos = note.x != null && note.y != null
+  const pos = hasPos ? { x: note.x, y: note.y } : activeDisplayPosition(width, height)
   const win = new BrowserWindow({
-    width: note.width || 260,
-    height: note.collapsed ? TITLEBAR_H : note.height || 280,
-    x: note.x ?? undefined,
-    y: note.y ?? undefined,
+    width,
+    height,
+    x: pos.x,
+    y: pos.y,
     minWidth: 180,
     minHeight: TITLEBAR_H,
     frame: false,
@@ -261,6 +300,7 @@ function createNoteWindow(note) {
   })
   win.on('resize', () => persistBounds(note.id, win))
   win.on('closed', () => noteWindows.delete(note.id))
+  bindFocusFade(note.id, win)
 
   noteWindows.set(note.id, win)
   return win

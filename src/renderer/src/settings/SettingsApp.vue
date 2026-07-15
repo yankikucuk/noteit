@@ -8,13 +8,19 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { COLOR_ORDER, COLORS } from '../shared/colors'
 import IconBtn from '../ui/IconBtn.vue'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
+import ShortcutInput from '../ui/ShortcutInput.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import { pushToast } from '../shared/toast.js'
+import { applyTheme } from '../shared/theme.js'
 import { t, locale, AVAILABLE_LOCALES } from '../i18n.js'
 
 const launchAtLogin = ref(false)
+const fadeUnfocused = ref(false)
 const defaultColor = ref('yellow')
 const language = ref('tr')
+const theme = ref('system')
+const shortcutNewNote = ref('CommandOrControl+Alt+N')
+const shortcutExplorer = ref('CommandOrControl+Alt+E')
 const appInfo = ref({ version: '', name: 'NoteIt', packaged: false })
 
 /** Maps an update:status code to a toast. */
@@ -29,8 +35,15 @@ let unsub = null
 
 onMounted(async () => {
   launchAtLogin.value = !!(await window.api.settings.get('launch_at_login', false))
+  fadeUnfocused.value = !!(await window.api.settings.get('fade_unfocused', false))
   defaultColor.value = await window.api.settings.get('default_note_color', 'yellow')
   language.value = await window.api.settings.get('language', locale.value)
+  theme.value = await window.api.settings.get('theme', 'system')
+  shortcutNewNote.value = await window.api.settings.get('shortcut_new_note', shortcutNewNote.value)
+  shortcutExplorer.value = await window.api.settings.get(
+    'shortcut_explorer',
+    shortcutExplorer.value
+  )
   appInfo.value = await window.api.appInfo.get()
   unsub = window.api.on('update:status', (status) => UPDATE_TOASTS[status]?.())
 })
@@ -45,6 +58,10 @@ async function setLaunch(v) {
   launchAtLogin.value = !!v
   await window.api.settings.set('launch_at_login', !!v)
 }
+async function setFade(v) {
+  fadeUnfocused.value = !!v
+  await window.api.settings.set('fade_unfocused', !!v)
+}
 async function setColor(c) {
   defaultColor.value = c
   await window.api.settings.set('default_note_color', c)
@@ -52,6 +69,15 @@ async function setColor(c) {
 async function setLanguage(code) {
   language.value = code
   await window.api.settings.set('language', code)
+}
+async function setTheme(value) {
+  theme.value = value
+  applyTheme(value) // instant feedback in this window
+  await window.api.settings.set('theme', value)
+}
+async function setShortcut(key, target, value) {
+  target.value = value
+  await window.api.settings.set(key, value)
 }
 async function backup() {
   const r = await window.api.backup.create()
@@ -103,10 +129,27 @@ function close() {
         </div>
         <div class="row">
           <div class="row-label">
+            <span>{{ t('settings.theme') }}</span>
+          </div>
+          <select class="lang" :value="theme" @change="setTheme($event.target.value)">
+            <option value="system">{{ t('theme.system') }}</option>
+            <option value="light">{{ t('theme.light') }}</option>
+            <option value="dark">{{ t('theme.dark') }}</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="row-label">
             <span>{{ t('settings.launchAtLogin') }}</span>
             <small>{{ t('settings.launchAtLoginDesc') }}</small>
           </div>
           <ToggleSwitch :model-value="launchAtLogin" @update:model-value="setLaunch" />
+        </div>
+        <div class="row">
+          <div class="row-label">
+            <span>{{ t('settings.fadeUnfocused') }}</span>
+            <small>{{ t('settings.fadeUnfocusedDesc') }}</small>
+          </div>
+          <ToggleSwitch :model-value="fadeUnfocused" @update:model-value="setFade" />
         </div>
         <div class="row col">
           <div class="row-label">
@@ -125,6 +168,29 @@ function close() {
               <i v-if="defaultColor === name" class="fa-solid fa-check"></i>
             </button>
           </div>
+        </div>
+      </section>
+
+      <!-- Shortcuts -->
+      <section>
+        <h3>{{ t('settings.shortcuts') }}</h3>
+        <div class="row">
+          <div class="row-label">
+            <span>{{ t('settings.shortcutNewNote') }}</span>
+          </div>
+          <ShortcutInput
+            :model-value="shortcutNewNote"
+            @update:model-value="(v) => setShortcut('shortcut_new_note', shortcutNewNote, v)"
+          />
+        </div>
+        <div class="row">
+          <div class="row-label">
+            <span>{{ t('settings.shortcutExplorer') }}</span>
+          </div>
+          <ShortcutInput
+            :model-value="shortcutExplorer"
+            @update:model-value="(v) => setShortcut('shortcut_explorer', shortcutExplorer, v)"
+          />
         </div>
       </section>
 

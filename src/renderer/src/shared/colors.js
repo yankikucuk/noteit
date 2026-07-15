@@ -37,13 +37,47 @@ export const COLOR_ORDER = [
   'charcoal'
 ]
 
+/** Regex for a custom `#RRGGBB` color value. */
+const HEX = /^#[0-9a-fA-F]{6}$/
+
+/** Relative luminance (0..1) of a `#RRGGBB` color. */
+function luminance(hex) {
+  const n = parseInt(hex.slice(1), 16)
+  return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255
+}
+
+/** Shades a `#RRGGBB` color by `amt` (-1 darkens … +1 lightens). */
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16)
+  const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)))
+  const r = clamp(((n >> 16) & 255) + amt * 255)
+  const g = clamp(((n >> 8) & 255) + amt * 255)
+  const b = clamp((n & 255) + amt * 255)
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)
+}
+
 /**
- * Resolves a note color, defaulting to yellow for unknown keys.
- * @param {string} name - Color key.
+ * Resolves a note color. Accepts a preset key or a custom `#RRGGBB` value, for
+ * which the title bar, text and accent are derived (text auto-contrasts).
+ * @param {string} name - Preset color key or custom hex.
  * @returns {{bg: string, bar: string, text: string, accent: string}}
  */
 export function getColor(name) {
+  if (typeof name === 'string' && HEX.test(name)) {
+    const dark = luminance(name) < 0.5
+    return {
+      bg: name,
+      bar: shade(name, dark ? 0.08 : -0.08),
+      text: dark ? '#f0f0f0' : '#2a2a2a',
+      accent: shade(name, dark ? 0.28 : -0.28)
+    }
+  }
   return COLORS[name] || COLORS.yellow
+}
+
+/** @param {string} name @returns {boolean} Whether the value is a custom hex color. */
+export function isCustomColor(name) {
+  return typeof name === 'string' && HEX.test(name)
 }
 
 /**

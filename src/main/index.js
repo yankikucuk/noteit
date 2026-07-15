@@ -16,10 +16,11 @@ import log from './logger.js'
 import { initDatabase, closeDatabase, backupTo } from './database.js'
 import { registerIpc } from './ipc.js'
 import { createTray, newNote } from './tray.js'
-import { restoreVisibleNotes, openExplorer, openSettingsWindow, flushAllBounds } from './windows.js'
+import { restoreVisibleNotes, openSettingsWindow, flushAllBounds } from './windows.js'
 import { startAlarmScheduler, stopAlarmScheduler } from './alarms.js'
 import { buildApplicationMenu } from './menu.js'
 import { initAutoUpdater } from './updater.js'
+import { applyGlobalShortcuts } from './shortcuts.js'
 import { initLocale, setLocale, t } from './i18n.js'
 import {
   getSetting,
@@ -66,8 +67,7 @@ if (!gotLock) {
     startAlarmScheduler()
     startAutoBackup()
 
-    registerShortcut('CommandOrControl+Alt+N', () => newNote())
-    registerShortcut('CommandOrControl+Alt+E', () => openExplorer())
+    applyGlobalShortcuts()
 
     if (!is.dev) initAutoUpdater()
   })
@@ -164,28 +164,6 @@ function startAutoBackup() {
   }
   run()
   setInterval(run, 24 * 60 * 60 * 1000)
-}
-
-/**
- * Registers a global shortcut and verifies it was actually claimed. Another app
- * may already own the accelerator; in that case we log a warning rather than
- * failing silently.
- * @param {string} accelerator - Electron accelerator (e.g. "CommandOrControl+Alt+N").
- * @param {() => void} handler - Invoked when the shortcut fires.
- * @returns {boolean} True if the shortcut was registered.
- */
-function registerShortcut(accelerator, handler) {
-  try {
-    globalShortcut.register(accelerator, handler)
-  } catch (err) {
-    log.warn(`Could not register global shortcut ${accelerator}:`, err)
-    return false
-  }
-  if (!globalShortcut.isRegistered(accelerator)) {
-    log.warn(`Global shortcut ${accelerator} is unavailable (already in use by another app).`)
-    return false
-  }
-  return true
 }
 
 /** Seeds a friendly welcome note the first time the app runs. */

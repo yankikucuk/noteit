@@ -181,8 +181,19 @@ export default {
   'settings.title': 'Ayarlar',
   'settings.general': 'Genel',
   'settings.language': 'Dil',
+  'settings.theme': 'Tema',
+  'theme.system': 'Sistem',
+  'theme.light': 'Açık',
+  'theme.dark': 'Koyu',
+  'settings.shortcuts': 'Kısayollar',
+  'settings.shortcutNewNote': 'Yeni not',
+  'settings.shortcutExplorer': 'Gezgini aç',
+  'shortcut.press': 'Tuşlara bas…',
+  'shortcut.none': 'Atanmadı',
   'settings.launchAtLogin': 'Sistemle başlat',
   'settings.launchAtLoginDesc': 'NoteIt oturum açıldığında otomatik başlasın',
+  'settings.fadeUnfocused': 'Odak dışı notları soluklaştır',
+  'settings.fadeUnfocusedDesc': 'Odakta olmayan not pencerelerini soluklaştır',
   'settings.defaultColor': 'Varsayılan not rengi',
   'settings.backup': 'Yedekleme',
   'settings.backupHint':
@@ -253,6 +264,7 @@ export default {
   'color.white': 'Beyaz',
   'color.gray': 'Gri',
   'color.charcoal': 'Antrasit',
+  'color.custom': 'Özel renk',
 
   // Tag colors
   'tagColor.slate': 'Gri',

@@ -372,7 +372,7 @@ function back() {
   text-align: left;
 }
 .row-btn:hover {
-  border-color: #d7dade;
+  border-color: var(--x-text-faint);
 }
 .row-btn.danger {
   color: #d64545;

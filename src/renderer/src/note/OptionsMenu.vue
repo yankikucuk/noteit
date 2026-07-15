@@ -12,7 +12,7 @@
  * @emits close - Request to close the menu.
  */
 import { computed } from 'vue'
-import { COLOR_ORDER, COLORS } from '../shared/colors'
+import { COLOR_ORDER, COLORS, isCustomColor } from '../shared/colors'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import { t } from '../i18n.js'
 
@@ -21,6 +21,9 @@ const props = defineProps({
   hasAlarm: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update', 'action', 'close'])
+
+/** Whether the note uses a custom (non-preset) color. */
+const isCustom = computed(() => isCustomColor(props.note.color))
 
 /** Word and character counts for the note's plain text. */
 const stats = computed(() => {
@@ -54,6 +57,19 @@ function setToggle(field, val) {
       >
         <i v-if="note.color === name" class="fa-solid fa-check"></i>
       </button>
+      <label
+        class="swatch custom"
+        :class="{ sel: isCustom }"
+        :style="isCustom ? { background: note.color } : {}"
+        :title="t('color.custom')"
+      >
+        <input
+          type="color"
+          :value="isCustom ? note.color : '#7c9cff'"
+          @input="setColor($event.target.value)"
+        />
+        <i :class="isCustom ? 'fa-solid fa-check' : 'fa-solid fa-eye-dropper'"></i>
+      </label>
     </div>
 
     <!-- Opacity -->
@@ -190,6 +206,20 @@ function setToggle(field, val) {
   box-shadow:
     0 0 0 2px var(--bar),
     0 0 0 3.5px var(--text);
+}
+.swatch.custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(#ff6666, #ffdd66, #66ff66, #66ddff, #6666ff, #ff66ff, #ff6666);
+  color: rgba(0, 0, 0, 0.7);
+}
+.swatch.custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
 }
 .opacity-row {
   display: flex;

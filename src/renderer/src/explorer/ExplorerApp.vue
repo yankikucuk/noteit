@@ -594,7 +594,7 @@ function closeWindow() {
   gap: 2px;
   margin: 0 12px;
   padding: 3px;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--hover);
   border-radius: var(--r-md);
 }
 .segmented button {
@@ -708,7 +708,7 @@ function closeWindow() {
   transition: all var(--dur) var(--ease);
 }
 .pill:hover {
-  border-color: #d7dade;
+  border-color: var(--x-text-faint);
 }
 .pill.on {
   background: var(--x-brand);
@@ -747,7 +747,7 @@ function closeWindow() {
   transition: all var(--dur) var(--ease);
 }
 .tag-pill:hover {
-  border-color: #d7dade;
+  border-color: var(--x-text-faint);
 }
 .tag-pill.on {
   border-color: transparent;
@@ -855,7 +855,7 @@ function closeWindow() {
     transform var(--dur) var(--ease);
 }
 .card:hover {
-  border-color: #d7dade;
+  border-color: var(--x-text-faint);
   box-shadow: var(--shadow-2);
 }
 .card.sel {

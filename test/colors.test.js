@@ -2,11 +2,37 @@ import { describe, it, expect } from 'vitest'
 import {
   getColor,
   getTagColor,
+  isCustomColor,
   COLOR_ORDER,
   TAG_COLOR_ORDER,
   COLORS,
   TAG_COLORS
 } from '../src/renderer/src/shared/colors.js'
+
+describe('custom colors', () => {
+  it('detects custom hex values', () => {
+    expect(isCustomColor('#aabbcc')).toBe(true)
+    expect(isCustomColor('yellow')).toBe(false)
+    expect(isCustomColor('#xyz')).toBe(false)
+    expect(isCustomColor(null)).toBe(false)
+  })
+
+  it('derives a palette from a custom hex with contrasting text', () => {
+    const light = getColor('#ffffff')
+    expect(light.bg).toBe('#ffffff')
+    expect(light.text).toBe('#2a2a2a') // dark text on a light color
+    const dark = getColor('#101010')
+    expect(dark.bg).toBe('#101010')
+    expect(dark.text).toBe('#f0f0f0') // light text on a dark color
+    for (const field of ['bg', 'bar', 'text', 'accent']) {
+      expect(light[field]).toMatch(/^#[0-9a-f]{6}$/i)
+    }
+  })
+
+  it('falls back to a preset for non-hex names', () => {
+    expect(getColor('blue')).toBe(COLORS.blue)
+  })
+})
 
 describe('note colors', () => {
   it('resolves a known color', () => {

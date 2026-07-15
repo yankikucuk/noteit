@@ -37,6 +37,7 @@ import { buildApplicationMenu } from './menu.js'
 import { checkForUpdatesManually } from './updater.js'
 import { htmlToPlainText, plainTextToRtf, htmlToMarkdown } from '../shared/exportFormat.js'
 import { printNote, noteToPdf } from './printing.js'
+import { applyGlobalShortcuts } from './shortcuts.js'
 import { marked } from 'marked'
 
 /**
@@ -326,6 +327,8 @@ export function registerIpc() {
     repo.setSetting(key, value)
     if (key === 'launch_at_login') app.setLoginItemSettings({ openAtLogin: !!value })
     if (key === 'language') applyLanguageChange(value)
+    if (key === 'theme') broadcastToAllWindows('theme:changed', value)
+    if (key.startsWith('shortcut_')) applyGlobalShortcuts()
     return true
   })
   handle('settings:open', () => {

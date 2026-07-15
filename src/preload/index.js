@@ -18,7 +18,8 @@ const ALLOWED_EVENTS = [
   'note:open-history',
   'explorer:refresh',
   'locale:changed',
-  'update:status'
+  'update:status',
+  'theme:changed'
 ]
 
 /** The API object exposed to the renderer as `window.api`. */
