@@ -12,6 +12,7 @@ import TagChips from '../ui/TagChips.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import DialogHost from '../ui/DialogHost.vue'
 import ProfileMenu from './ProfileMenu.vue'
+import CommandPalette from './CommandPalette.vue'
 import { pushToast } from '../shared/toast.js'
 import { promptDialog, confirmDialog } from '../shared/dialogs.js'
 import { t, locale } from '../i18n.js'
@@ -606,6 +607,7 @@ function closeWindow() {
       <span class="stat">{{ t('explorer.noteCount', { count: visibleNotes.length }) }}</span>
     </footer>
 
+    <CommandPalette @profiles="profileMenuOpen = true" @refresh="refresh" />
     <ToastHost />
     <DialogHost />
   </div>

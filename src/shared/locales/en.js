@@ -5,6 +5,21 @@ export default {
   'common.cancel': 'Cancel',
   'common.delete': 'Delete',
 
+  // Command palette
+  'cmd.placeholder': 'Type a command or search notes…',
+  'cmd.newNote': 'New note',
+  'cmd.newCategory': 'New category',
+  'cmd.switchProfile': 'Switch profile',
+  'cmd.settings': 'Settings',
+  'cmd.themeLight': 'Theme: Light',
+  'cmd.themeDark': 'Theme: Dark',
+  'cmd.themeSystem': 'Theme: System',
+  'cmd.backup': 'Create backup',
+  'cmd.import': 'Import notes (JSON)',
+  'cmd.importMarkdown': 'Import Markdown',
+  'cmd.openNote': 'Open',
+  'cmd.empty': 'No results',
+
   // Tray menu
   'tray.newNote': 'New Note',
   'tray.newFromClipboard': 'New Note from Clipboard',

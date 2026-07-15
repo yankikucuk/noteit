@@ -5,6 +5,21 @@ export default {
   'common.cancel': 'İptal',
   'common.delete': 'Sil',
 
+  // Command palette
+  'cmd.placeholder': 'Komut yaz veya notlarda ara…',
+  'cmd.newNote': 'Yeni not',
+  'cmd.newCategory': 'Yeni kategori',
+  'cmd.switchProfile': 'Profil değiştir',
+  'cmd.settings': 'Ayarlar',
+  'cmd.themeLight': 'Tema: Açık',
+  'cmd.themeDark': 'Tema: Koyu',
+  'cmd.themeSystem': 'Tema: Sistem',
+  'cmd.backup': 'Yedek oluştur',
+  'cmd.import': 'Notları içe aktar (JSON)',
+  'cmd.importMarkdown': 'Markdown içe aktar',
+  'cmd.openNote': 'Aç',
+  'cmd.empty': 'Sonuç yok',
+
   // Tray menu
   'tray.newNote': 'Yeni Not',
   'tray.newFromClipboard': 'Panodan Yeni Not',
