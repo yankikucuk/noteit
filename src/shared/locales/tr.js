@@ -243,6 +243,10 @@ export default {
   'settings.launchAtLoginDesc': 'NoteIt oturum açıldığında otomatik başlasın',
   'settings.fadeUnfocused': 'Odak dışı notları soluklaştır',
   'settings.fadeUnfocusedDesc': 'Odakta olmayan not pencerelerini soluklaştır',
+  'settings.autoLock': 'Boştayken otomatik kilitle',
+  'settings.autoLockDesc': 'Şifre korumalı profili hareketsizlik sonrası kilitle',
+  'settings.autoLockOff': 'Kapalı',
+  'settings.autoLockMinutes': '{n} dk sonra',
   'settings.defaultColor': 'Varsayılan not rengi',
   'settings.backup': 'Yedekleme',
   'settings.backupHint':

@@ -18,6 +18,7 @@ import { registerIpc } from './ipc.js'
 import { createTray, newNote } from './tray.js'
 import { restoreVisibleNotes, openSettingsWindow, flushAllBounds } from './windows.js'
 import { startAlarmScheduler, stopAlarmScheduler } from './alarms.js'
+import { startIdleWatch, stopIdleWatch } from './autolock.js'
 import { buildApplicationMenu } from './menu.js'
 import { initAutoUpdater } from './updater.js'
 import { applyGlobalShortcuts } from './shortcuts.js'
@@ -82,6 +83,7 @@ if (!gotLock) {
     firstRunWelcome()
     restoreVisibleNotes()
     startAlarmScheduler()
+    startIdleWatch()
     startAutoBackup()
 
     applyGlobalShortcuts()
@@ -100,6 +102,7 @@ if (!gotLock) {
   app.on('will-quit', () => {
     globalShortcut.unregisterAll()
     stopAlarmScheduler()
+    stopIdleWatch()
     flushAllBounds()
     closeDatabase()
   })

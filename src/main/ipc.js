@@ -80,7 +80,7 @@ function handle(channel, fn) {
  *
  * @param {number} id - Profile id to activate.
  */
-function switchToProfile(id) {
+export function switchToProfile(id) {
   repo.setCurrentProfile(id)
   repo.setSetting('active_profile_id', id)
   closeAllNoteWindows()

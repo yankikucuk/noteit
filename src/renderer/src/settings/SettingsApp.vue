@@ -16,6 +16,7 @@ import { t, locale, AVAILABLE_LOCALES } from '../i18n.js'
 
 const launchAtLogin = ref(false)
 const fadeUnfocused = ref(false)
+const autoLockMinutes = ref(0)
 const defaultColor = ref('yellow')
 const language = ref('tr')
 const theme = ref('system')
@@ -36,6 +37,7 @@ let unsub = null
 onMounted(async () => {
   launchAtLogin.value = !!(await window.api.settings.get('launch_at_login', false))
   fadeUnfocused.value = !!(await window.api.settings.get('fade_unfocused', false))
+  autoLockMinutes.value = Number(await window.api.settings.get('auto_lock_minutes', 0)) || 0
   defaultColor.value = await window.api.settings.get('default_note_color', 'yellow')
   language.value = await window.api.settings.get('language', locale.value)
   theme.value = await window.api.settings.get('theme', 'system')
@@ -61,6 +63,10 @@ async function setLaunch(v) {
 async function setFade(v) {
   fadeUnfocused.value = !!v
   await window.api.settings.set('fade_unfocused', !!v)
+}
+async function setAutoLock(v) {
+  autoLockMinutes.value = Number(v) || 0
+  await window.api.settings.set('auto_lock_minutes', autoLockMinutes.value)
 }
 async function setColor(c) {
   defaultColor.value = c
@@ -150,6 +156,22 @@ function close() {
             <small>{{ t('settings.fadeUnfocusedDesc') }}</small>
           </div>
           <ToggleSwitch :model-value="fadeUnfocused" @update:model-value="setFade" />
+        </div>
+        <div class="row">
+          <div class="row-label">
+            <span>{{ t('settings.autoLock') }}</span>
+            <small>{{ t('settings.autoLockDesc') }}</small>
+          </div>
+          <select
+            class="lang"
+            :value="autoLockMinutes"
+            @change="setAutoLock(Number($event.target.value))"
+          >
+            <option :value="0">{{ t('settings.autoLockOff') }}</option>
+            <option :value="5">{{ t('settings.autoLockMinutes', { n: 5 }) }}</option>
+            <option :value="15">{{ t('settings.autoLockMinutes', { n: 15 }) }}</option>
+            <option :value="30">{{ t('settings.autoLockMinutes', { n: 30 }) }}</option>
+          </select>
         </div>
         <div class="row col">
           <div class="row-label">
