@@ -125,6 +125,13 @@ export default {
   'snooze.tomorrow': 'Yarın',
   'snooze.dismiss': 'Kapat',
 
+  // Agenda
+  'agenda.title': 'Yaklaşan hatırlatıcılar',
+  'agenda.empty': 'Yaklaşan hatırlatıcı yok',
+  'agenda.overdue': 'Gecikmiş',
+  'agenda.today': 'Bugün',
+  'agenda.tomorrow': 'Yarın',
+
   // Tags
   'tag.searchOrCreate': 'Etiket ara veya oluştur…',
   'tag.create': '“{name}” oluştur',

@@ -30,6 +30,8 @@ const selected = ref(new Set())
 const currentProfile = ref(null)
 const profileMenuOpen = ref(false)
 const savedFilters = ref([])
+const agendaOpen = ref(false)
+const upcoming = ref([])
 
 // Incremental rendering: only the first `renderLimit` cards are in the DOM;
 // scrolling near the end reveals more. This keeps large lists responsive
@@ -69,6 +71,9 @@ async function loadTags() {
 async function loadFilters() {
   savedFilters.value = await window.api.filters.list()
 }
+async function loadAgenda() {
+  upcoming.value = await window.api.alarms.upcoming()
+}
 function onProfileSwitched() {
   notebookFilter.value = 'all'
   tagFilter.value = null
@@ -89,6 +94,7 @@ async function refresh() {
   }
   await loadNotebooks()
   await loadTags()
+  await loadAgenda()
   selected.value = new Set([...selected.value].filter((id) => notes.value.some((n) => n.id === id)))
 }
 
@@ -223,6 +229,42 @@ async function deleteFilter(f) {
   if (!ok) return
   savedFilters.value = savedFilters.value.filter((s) => s.id !== f.id)
   await persistFilters()
+}
+
+// --- Agenda ---
+// A dropdown listing the profile's upcoming reminders, soonest first.
+
+function toggleAgenda() {
+  agendaOpen.value = !agendaOpen.value
+  if (agendaOpen.value) loadAgenda()
+}
+function openAgendaNote(row) {
+  agendaOpen.value = false
+  window.api.notes.open(row.note_id)
+}
+
+/** First line of a reminder's note, for the agenda label. */
+function agendaTitle(row) {
+  return (row.plain_text || '').trim().split('\n')[0] || t('note.empty')
+}
+
+/** Human-friendly "when" for a reminder: overdue, today/tomorrow + time, else a date. */
+function agendaWhen(ts) {
+  const loc = locale.value === 'en' ? 'en-US' : 'tr-TR'
+  const d = new Date(ts)
+  const time = d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+  if (ts < Date.now()) return t('agenda.overdue')
+  const today = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(today.getDate() + 1)
+  if (d.toDateString() === today.toDateString()) return `${t('agenda.today')} ${time}`
+  if (d.toDateString() === tomorrow.toDateString()) return `${t('agenda.tomorrow')} ${time}`
+  return `${d.toLocaleDateString(loc, { day: '2-digit', month: 'short' })} ${time}`
+}
+
+/** Localised repeat label, or empty for a one-shot. */
+function repeatLabel(mode) {
+  return mode && mode !== 'once' ? t(`alarm.${mode}`) : ''
 }
 
 function titleOf(n) {
@@ -405,6 +447,15 @@ function closeWindow() {
         <i class="fa-solid fa-chevron-down chev"></i>
       </button>
       <IconBtn icon="fa-solid fa-plus" :title="t('explorer.newNote')" @click="newNote" />
+      <button
+        class="agenda-btn no-drag"
+        :class="{ on: agendaOpen }"
+        :title="t('agenda.title')"
+        @click.stop="toggleAgenda"
+      >
+        <i class="fa-solid fa-bell"></i>
+        <span v-if="upcoming.length" class="agenda-count">{{ upcoming.length }}</span>
+      </button>
       <IconBtn icon="fa-solid fa-xmark" :title="t('explorer.close')" @click="closeWindow" />
 
       <div v-if="profileMenuOpen" class="pm-overlay" @click="profileMenuOpen = false"></div>
@@ -414,6 +465,32 @@ function closeWindow() {
         @close="profileMenuOpen = false"
         @switched="onProfileSwitched"
       />
+
+      <div v-if="agendaOpen" class="pm-overlay" @click="agendaOpen = false"></div>
+      <div v-if="agendaOpen" class="agenda-pop no-drag" @click.stop>
+        <div class="agenda-head">
+          <i class="fa-solid fa-bell" aria-hidden="true"></i>
+          <span>{{ t('agenda.title') }}</span>
+        </div>
+        <div v-if="!upcoming.length" class="agenda-empty">{{ t('agenda.empty') }}</div>
+        <button
+          v-for="row in upcoming"
+          :key="row.alarm_id"
+          class="agenda-row"
+          @click="openAgendaNote(row)"
+        >
+          <span class="a-stripe" :style="{ background: getColor(row.color).accent }"></span>
+          <span class="a-main">
+            <span class="a-title">{{ agendaTitle(row) }}</span>
+            <span class="a-when" :class="{ overdue: row.trigger_at < Date.now() }">
+              {{ agendaWhen(row.trigger_at) }}
+              <span v-if="repeatLabel(row.repeat_mode)" class="a-repeat">
+                · {{ repeatLabel(row.repeat_mode) }}
+              </span>
+            </span>
+          </span>
+        </button>
+      </div>
     </header>
 
     <!-- Segmented tabs -->
@@ -792,6 +869,116 @@ function closeWindow() {
   top: 44px;
   left: 8px;
   z-index: 100;
+}
+
+/* Agenda */
+.agenda-btn {
+  position: relative;
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: var(--x-text-dim);
+  cursor: pointer;
+  padding: 7px 9px;
+  border-radius: var(--r-sm);
+  transition: background var(--dur) var(--ease);
+}
+.agenda-btn:hover,
+.agenda-btn.on {
+  background: var(--hover);
+}
+.agenda-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--x-brand);
+  color: #4a3c00;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+.agenda-pop {
+  position: absolute;
+  top: 44px;
+  right: 8px;
+  width: min(300px, calc(100vw - 16px));
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--x-surface);
+  border: 1px solid var(--x-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  z-index: 100;
+  padding: 6px;
+}
+.agenda-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px 8px;
+  font-weight: 650;
+  font-size: 12.5px;
+  color: var(--x-text);
+}
+.agenda-head > i {
+  color: var(--x-brand);
+}
+.agenda-empty {
+  padding: 16px 8px;
+  text-align: center;
+  color: var(--x-text-faint);
+  font-size: 12px;
+}
+.agenda-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-align: left;
+}
+.agenda-row:hover {
+  background: var(--hover);
+}
+.agenda-row .a-stripe {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.agenda-row .a-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.agenda-row .a-title {
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.agenda-row .a-when {
+  font-size: 10.5px;
+  color: var(--x-text-faint);
+}
+.agenda-row .a-when.overdue {
+  color: var(--x-danger, #d9534f);
+  font-weight: 600;
+}
+.agenda-row .a-repeat {
+  opacity: 0.8;
 }
 
 /* Segmented control */

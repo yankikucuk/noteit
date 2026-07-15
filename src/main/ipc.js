@@ -322,6 +322,7 @@ export function registerIpc() {
     sendToNote(noteId, 'note:alarm-changed', alarm)
     return alarm
   })
+  handle('alarms:upcoming', () => repo.getUpcomingAlarms())
 
   // --- Options popup window -------------------------------------------------
   handle('options:open', (_e, noteId, anchor) => {

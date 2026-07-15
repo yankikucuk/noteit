@@ -366,6 +366,25 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       const note = repo.createNote({})
       expect(repo.snoozeAlarm(note.id, Date.now() + 1000)).toBeNull()
     })
+
+    it('lists upcoming reminders soonest first, excluding trashed and archived', () => {
+      const soon = repo.createNote({ plain_text: 'soon' })
+      const later = repo.createNote({ plain_text: 'later' })
+      const gone = repo.createNote({ plain_text: 'gone' })
+      const filed = repo.createNote({ plain_text: 'filed' })
+      const base = Date.now() + 1e6
+      repo.setAlarm(later.id, base + 2000, 'once')
+      repo.setAlarm(soon.id, base + 1000, 'daily')
+      repo.setAlarm(gone.id, base + 500, 'once')
+      repo.setAlarm(filed.id, base + 500, 'once')
+      repo.trashNote(gone.id)
+      repo.archiveNote(filed.id)
+
+      const rows = repo.getUpcomingAlarms()
+      const ids = rows.map((r) => r.note_id)
+      expect(ids).toEqual([soon.id, later.id]) // ordered, trashed + archived excluded
+      expect(rows[0]).toMatchObject({ plain_text: 'soon', repeat_mode: 'daily' })
+    })
   })
 
   describe('note operations', () => {

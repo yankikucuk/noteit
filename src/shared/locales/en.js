@@ -125,6 +125,13 @@ export default {
   'snooze.tomorrow': 'Tomorrow',
   'snooze.dismiss': 'Dismiss',
 
+  // Agenda
+  'agenda.title': 'Upcoming reminders',
+  'agenda.empty': 'No upcoming reminders',
+  'agenda.overdue': 'Overdue',
+  'agenda.today': 'Today',
+  'agenda.tomorrow': 'Tomorrow',
+
   // Tags
   'tag.searchOrCreate': 'Search or create a tag…',
   'tag.create': 'Create “{name}”',

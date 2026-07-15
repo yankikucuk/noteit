@@ -83,7 +83,8 @@ const api = {
     set: (noteId, triggerAt, repeatMode) =>
       ipcRenderer.invoke('alarm:set', noteId, triggerAt, repeatMode),
     clear: (noteId) => ipcRenderer.invoke('alarm:clear', noteId),
-    snooze: (noteId, triggerAt) => ipcRenderer.invoke('alarm:snooze', noteId, triggerAt)
+    snooze: (noteId, triggerAt) => ipcRenderer.invoke('alarm:snooze', noteId, triggerAt),
+    upcoming: () => ipcRenderer.invoke('alarms:upcoming')
   },
   backup: {
     create: () => ipcRenderer.invoke('backup:create'),

@@ -668,6 +668,25 @@ export function getDueAlarms(now = Date.now()) {
 }
 
 /**
+ * Lists the active profile's enabled reminders (past-due and future) joined
+ * with their note, soonest first — the data behind the Explorer agenda.
+ * @param {number} [limit] - Maximum rows to return.
+ * @returns {object[]} Rows of { alarm_id, trigger_at, repeat_mode, note_id, plain_text, color }.
+ */
+export function getUpcomingAlarms(limit = 50) {
+  return getDb()
+    .prepare(
+      `SELECT a.id AS alarm_id, a.trigger_at, a.repeat_mode,
+              n.id AS note_id, n.plain_text, n.color
+         FROM alarms a JOIN notes n ON n.id = a.note_id
+        WHERE a.enabled = 1 AND n.profile_id = ?
+          AND n.deleted_at IS NULL AND n.archived_at IS NULL
+        ORDER BY a.trigger_at ASC LIMIT ?`
+    )
+    .all(currentProfileId, limit)
+}
+
+/**
  * Records that an alarm fired. For repeating alarms, advances `trigger_at`;
  * for one-shot alarms, disables it.
  * @param {number} id - Alarm id.
