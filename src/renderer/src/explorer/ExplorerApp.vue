@@ -15,6 +15,7 @@ import ProfileMenu from './ProfileMenu.vue'
 import CommandPalette from './CommandPalette.vue'
 import { pushToast } from '../shared/toast.js'
 import { promptDialog, confirmDialog } from '../shared/dialogs.js'
+import { repeatLabel } from '../shared/repeatLabel.js'
 import { t, locale } from '../i18n.js'
 
 const view = ref('notes') // 'notes' | 'trash'
@@ -260,11 +261,6 @@ function agendaWhen(ts) {
   if (d.toDateString() === today.toDateString()) return `${t('agenda.today')} ${time}`
   if (d.toDateString() === tomorrow.toDateString()) return `${t('agenda.tomorrow')} ${time}`
   return `${d.toLocaleDateString(loc, { day: '2-digit', month: 'short' })} ${time}`
-}
-
-/** Localised repeat label, or empty for a one-shot. */
-function repeatLabel(mode) {
-  return mode && mode !== 'once' ? t(`alarm.${mode}`) : ''
 }
 
 function titleOf(n) {

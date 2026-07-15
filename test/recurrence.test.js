@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { computeNextTrigger } from '../src/shared/recurrence.js'
+import { computeNextTrigger, parseRepeat } from '../src/shared/recurrence.js'
 
-/** 2026-03-15 09:30 local time. */
+/** 2026-03-15 09:30 local time (a Sunday). */
 const base = new Date(2026, 2, 15, 9, 30, 0).getTime()
 
 describe('computeNextTrigger', () => {
@@ -44,5 +44,49 @@ describe('computeNextTrigger', () => {
   it('preserves the time of day across a DST-agnostic weekly step', () => {
     const next = new Date(computeNextTrigger(base, 'daily'))
     expect(`${next.getHours()}:${next.getMinutes()}`).toBe('9:30')
+  })
+
+  it('advances an every-N-days custom rule', () => {
+    const next = new Date(computeNextTrigger(base, 'everyDays:3'))
+    expect(next.getDate()).toBe(18) // 15 + 3
+    expect(`${next.getHours()}:${next.getMinutes()}`).toBe('9:30')
+  })
+
+  it('advances a weekdays rule to the next selected day', () => {
+    // base is a Sunday (day 0); next selected among Mon(1)/Wed(3) is Monday.
+    const next = new Date(computeNextTrigger(base, 'weekdays:1,3'))
+    expect(next.getDay()).toBe(1)
+    expect(next.getDate()).toBe(16)
+  })
+
+  it('wraps a weekdays rule across the week boundary', () => {
+    // From Sunday, the only selected day Saturday(6) lands six days later.
+    const next = new Date(computeNextTrigger(base, 'weekdays:6'))
+    expect(next.getDay()).toBe(6)
+    expect(next.getDate()).toBe(21)
+  })
+
+  it('treats malformed custom rules as one-shot', () => {
+    expect(computeNextTrigger(base, 'everyDays:0')).toBeNull()
+    expect(computeNextTrigger(base, 'weekdays:9')).toBeNull()
+    expect(computeNextTrigger(base, 'everyDays:x')).toBeNull()
+  })
+})
+
+describe('parseRepeat', () => {
+  it('recognises presets', () => {
+    expect(parseRepeat('daily')).toEqual({ kind: 'daily' })
+    expect(parseRepeat('yearly')).toEqual({ kind: 'yearly' })
+  })
+
+  it('parses custom rules and dedupes/sorts weekdays', () => {
+    expect(parseRepeat('everyDays:5')).toEqual({ kind: 'everyDays', n: 5 })
+    expect(parseRepeat('weekdays:5,1,3,1')).toEqual({ kind: 'weekdays', days: [1, 3, 5] })
+  })
+
+  it('falls back to once for unknown or malformed input', () => {
+    expect(parseRepeat('once')).toEqual({ kind: 'once' })
+    expect(parseRepeat('nonsense')).toEqual({ kind: 'once' })
+    expect(parseRepeat(undefined)).toEqual({ kind: 'once' })
   })
 })
