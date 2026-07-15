@@ -317,6 +317,11 @@ export function registerIpc() {
     sendToNote(noteId, 'note:alarm-changed', null)
     return true
   })
+  handle('alarm:snooze', (_e, noteId, triggerAt) => {
+    const alarm = repo.snoozeAlarm(noteId, triggerAt)
+    sendToNote(noteId, 'note:alarm-changed', alarm)
+    return alarm
+  })
 
   // --- Options popup window -------------------------------------------------
   handle('options:open', (_e, noteId, anchor) => {

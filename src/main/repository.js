@@ -635,6 +635,23 @@ export function clearAlarm(noteId) {
 }
 
 /**
+ * Re-arms a note's alarm to fire again at a later time (snooze). The repeat
+ * mode is preserved; a recurring alarm resumes its cycle from the snoozed time.
+ * @param {number} noteId - Note id.
+ * @param {number} triggerAt - New trigger time (epoch ms).
+ * @returns {object|null} The updated alarm row, or null if the note has none.
+ */
+export function snoozeAlarm(noteId, triggerAt) {
+  const db = getDb()
+  const existing = getAlarmForNote(noteId)
+  if (!existing) return null
+  db.prepare(
+    'UPDATE alarms SET trigger_at = ?, enabled = 1, last_fired_at = NULL WHERE id = ?'
+  ).run(triggerAt, existing.id)
+  return db.prepare('SELECT * FROM alarms WHERE id = ?').get(existing.id)
+}
+
+/**
  * Returns due, enabled alarms whose note belongs to the active profile and is
  * not trashed.
  * @param {number} [now] - Reference time (epoch ms).

@@ -349,6 +349,23 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       repo.markAlarmFired(a.id, null)
       expect(repo.getAlarmForNote(note.id).enabled).toBe(0)
     })
+
+    it('re-arms a fired alarm on snooze, keeping the repeat mode', () => {
+      const note = repo.createNote({})
+      const a = repo.setAlarm(note.id, 1000, 'weekly')
+      repo.markAlarmFired(a.id, null) // one-shot disable path leaves enabled = 0
+      expect(repo.getAlarmForNote(note.id).enabled).toBe(0)
+
+      const later = Date.now() + 600000
+      const snoozed = repo.snoozeAlarm(note.id, later)
+      expect(snoozed).toMatchObject({ trigger_at: later, enabled: 1, repeat_mode: 'weekly' })
+      expect(snoozed.last_fired_at).toBeNull()
+    })
+
+    it('returns null when snoozing a note without an alarm', () => {
+      const note = repo.createNote({})
+      expect(repo.snoozeAlarm(note.id, Date.now() + 1000)).toBeNull()
+    })
   })
 
   describe('note operations', () => {

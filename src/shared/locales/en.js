@@ -118,6 +118,13 @@ export default {
   'alarm.cancel': 'Cancel',
   'alarm.save': 'Save',
 
+  // Snooze
+  'snooze.label': 'Reminder',
+  'snooze.min10': '10 min',
+  'snooze.hour1': '1 hour',
+  'snooze.tomorrow': 'Tomorrow',
+  'snooze.dismiss': 'Dismiss',
+
   // Tags
   'tag.searchOrCreate': 'Search or create a tag…',
   'tag.create': 'Create “{name}”',

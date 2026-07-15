@@ -118,6 +118,13 @@ export default {
   'alarm.cancel': 'İptal',
   'alarm.save': 'Kaydet',
 
+  // Snooze
+  'snooze.label': 'Hatırlatıcı',
+  'snooze.min10': '10 dk',
+  'snooze.hour1': '1 saat',
+  'snooze.tomorrow': 'Yarın',
+  'snooze.dismiss': 'Kapat',
+
   // Tags
   'tag.searchOrCreate': 'Etiket ara veya oluştur…',
   'tag.create': '“{name}” oluştur',

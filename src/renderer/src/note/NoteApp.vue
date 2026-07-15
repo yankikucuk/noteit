@@ -42,6 +42,7 @@ const alarmOpen = ref(false)
 const historyOpen = ref(false)
 const hasAlarm = ref(false)
 const shaking = ref(false)
+const snoozeOpen = ref(false)
 const formatMenu = reactive({ open: false, x: 0, y: 0 })
 const tagPickerOpen = ref(false)
 const categoryMenuOpen = ref(false)
@@ -116,6 +117,7 @@ onMounted(async () => {
     window.api.on('note:alarm-fired', () => {
       shaking.value = true
       setTimeout(() => (shaking.value = false), 900)
+      snoozeOpen.value = true
     })
   )
   // Open the alarm dialog when "Reminder" is chosen in the options window
@@ -193,6 +195,21 @@ function openOptions(e) {
 
 function focusEditor() {
   if (!alarmOpen.value && editable.value) editorRef.value?.focus()
+}
+
+// --- Snooze ---
+// Shown after a reminder fires so it can be pushed back without reopening the
+// alarm dialog. Presets re-arm the alarm; "tomorrow" targets 9am local time.
+async function snooze(minutes) {
+  await window.api.alarms.snooze(noteId, Date.now() + minutes * 60 * 1000)
+  snoozeOpen.value = false
+}
+async function snoozeTomorrow() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  d.setHours(9, 0, 0, 0)
+  await window.api.alarms.snooze(noteId, d.getTime())
+  snoozeOpen.value = false
 }
 
 // Right-click on text shows the formatting menu at the cursor
@@ -307,6 +324,18 @@ function onTagsChanged(tags) {
         @change="onEditorChange"
       />
     </main>
+
+    <!-- Snooze bar, shown after a reminder fires -->
+    <div v-if="snoozeOpen" class="snoozebar no-drag fade-in">
+      <i class="fa-solid fa-bell" aria-hidden="true"></i>
+      <span class="s-label">{{ t('snooze.label') }}</span>
+      <button @click="snooze(10)">{{ t('snooze.min10') }}</button>
+      <button @click="snooze(60)">{{ t('snooze.hour1') }}</button>
+      <button @click="snoozeTomorrow">{{ t('snooze.tomorrow') }}</button>
+      <button class="s-dismiss" :title="t('snooze.dismiss')" @click="snoozeOpen = false">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
 
     <!-- Category + tag bar -->
     <footer v-show="!note.collapsed" class="tagbar no-drag">
@@ -455,6 +484,52 @@ function onTagsChanged(tags) {
 }
 
 /* Category + tag bar */
+.snoozebar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--bar));
+  color: var(--text);
+  font-size: 11px;
+  border-top: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+.snoozebar > i {
+  color: var(--accent);
+}
+.snoozebar .s-label {
+  flex: 1;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.snoozebar button {
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.snoozebar button:hover {
+  background: color-mix(in srgb, var(--text) 14%, transparent);
+}
+.snoozebar .s-dismiss {
+  border: none;
+  background: transparent;
+  opacity: 0.6;
+  padding: 3px 5px;
+}
+.snoozebar .s-dismiss:hover {
+  opacity: 1;
+  background: transparent;
+}
 .tagbar {
   flex: 0 0 auto;
   display: flex;
