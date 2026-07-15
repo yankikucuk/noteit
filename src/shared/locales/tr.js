@@ -127,6 +127,14 @@ export default {
   'tag.deleteHint': 'Sağ tık: etiketi sil',
   'tag.deleteConfirm': '“{name}” etiketi silinsin mi? Tüm notlardan kaldırılır.',
 
+  // Saved filters
+  'filter.save': 'Filtreyi kaydet',
+  'filter.savePrompt': 'Bu filtreye ad verin:',
+  'filter.saved': 'Filtre kaydedildi',
+  'filter.deleteHint': 'Tıkla: uygula · Sağ tık: sil',
+  'filter.deleteTitle': 'Filtreyi sil',
+  'filter.deleteConfirm': '“{name}” filtresi silinsin mi?',
+
   // Categories & default profile
   'category.default': 'Genel',
   'profile.default': 'Genel',

@@ -368,6 +368,10 @@ export function registerIpc() {
     openSettingsWindow()
     return true
   })
+
+  // --- Saved filters (per-profile Explorer presets) -------------------------
+  handle('filters:list', () => repo.getSavedFilters())
+  handle('filters:save', (_e, filters) => repo.setSavedFilters(filters))
   // The active locale resolved by the main process (saved preference or OS).
   handle('locale:current', () => getLocale())
   handle('app:info', () => ({

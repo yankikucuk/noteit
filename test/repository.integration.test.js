@@ -448,4 +448,25 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       expect(repo.getSetting('k')).toBe('v2')
     })
   })
+
+  describe('saved filters', () => {
+    it('defaults to an empty list and round-trips presets', () => {
+      expect(repo.getSavedFilters()).toEqual([])
+      const preset = { id: 1, name: 'Starred', notebook: 'all', tag: null, sortBy: 'starred' }
+      repo.setSavedFilters([preset])
+      expect(repo.getSavedFilters()).toEqual([preset])
+    })
+
+    it('scopes presets per profile', () => {
+      repo.setSavedFilters([{ id: 1, name: 'P1 filter' }])
+      const p2 = repo.createProfile('P2')
+      repo.setCurrentProfile(p2.id)
+      expect(repo.getSavedFilters()).toEqual([])
+      repo.setSavedFilters([{ id: 2, name: 'P2 filter' }])
+      expect(repo.getSavedFilters()).toHaveLength(1)
+
+      repo.setCurrentProfile(1)
+      expect(repo.getSavedFilters()[0].name).toBe('P1 filter')
+    })
+  })
 })

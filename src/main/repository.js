@@ -856,3 +856,28 @@ export function setSetting(key, value) {
     )
     .run(key, JSON.stringify(value))
 }
+
+// ---------------------------------------------------------------------------
+// Saved filters (per-profile; category/tag/sort presets for the Explorer)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lists the saved Explorer filters for the current profile. Filters reference
+ * profile-scoped category and tag ids, so they are stored per profile.
+ * @returns {Array<object>} Saved filter presets (may be empty).
+ */
+export function getSavedFilters() {
+  const list = getSetting(`saved_filters:${currentProfileId}`, [])
+  return Array.isArray(list) ? list : []
+}
+
+/**
+ * Replaces the current profile's saved Explorer filters.
+ * @param {Array<object>} filters - The full list of presets to persist.
+ * @returns {Array<object>} The persisted list.
+ */
+export function setSavedFilters(filters) {
+  const list = Array.isArray(filters) ? filters : []
+  setSetting(`saved_filters:${currentProfileId}`, list)
+  return list
+}

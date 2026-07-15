@@ -29,6 +29,7 @@ const allTags = ref([])
 const selected = ref(new Set())
 const currentProfile = ref(null)
 const profileMenuOpen = ref(false)
+const savedFilters = ref([])
 
 // Incremental rendering: only the first `renderLimit` cards are in the DOM;
 // scrolling near the end reveals more. This keeps large lists responsive
@@ -43,12 +44,14 @@ onMounted(async () => {
   await loadProfile()
   await loadNotebooks()
   await loadTags()
+  await loadFilters()
   await refresh()
   unsub = window.api.on('explorer:refresh', () => {
     // Profile switch also fires this; reset profile filters
     notebookFilter.value = 'all'
     tagFilter.value = null
     loadProfile()
+    loadFilters()
     refresh()
   })
 })
@@ -63,10 +66,14 @@ async function loadNotebooks() {
 async function loadTags() {
   allTags.value = await window.api.tags.list()
 }
+async function loadFilters() {
+  savedFilters.value = await window.api.filters.list()
+}
 function onProfileSwitched() {
   notebookFilter.value = 'all'
   tagFilter.value = null
   loadProfile()
+  loadFilters()
   refresh()
 }
 
@@ -144,6 +151,78 @@ function switchView(v) {
 }
 function toggleTagFilter(id) {
   tagFilter.value = tagFilter.value === id ? null : id
+}
+
+// --- Saved filters ---
+// A preset captures the category, tag and sort of the current Notes view so a
+// frequent combination can be recalled with one click. Ids are validated on
+// apply because a category or tag the preset points at may have been deleted.
+
+/** Id of the saved filter matching the current view, or null. Drives the active pill highlight. */
+const activeFilterId = computed(() => {
+  const f = savedFilters.value.find(
+    (s) =>
+      s.notebook === notebookFilter.value &&
+      (s.tag ?? null) === tagFilter.value &&
+      s.sortBy === sortBy.value &&
+      s.sortDir === sortDir.value
+  )
+  return f ? f.id : null
+})
+
+/** True when the current view differs from the default and isn't already a saved preset. */
+const canSaveFilter = computed(
+  () =>
+    activeFilterId.value === null &&
+    (notebookFilter.value !== 'all' ||
+      tagFilter.value !== null ||
+      sortBy.value !== 'updated' ||
+      sortDir.value !== 'desc')
+)
+
+/** Persists the saved-filter list to the current profile. */
+async function persistFilters() {
+  await window.api.filters.save(savedFilters.value)
+}
+
+/** Prompts for a name and stores the current category/tag/sort as a preset. */
+async function saveCurrentFilter() {
+  const name = (await promptDialog({ title: t('filter.savePrompt') }))?.trim()
+  if (!name) return
+  savedFilters.value = [
+    ...savedFilters.value,
+    {
+      id: Date.now(),
+      name,
+      notebook: notebookFilter.value,
+      tag: tagFilter.value,
+      sortBy: sortBy.value,
+      sortDir: sortDir.value
+    }
+  ]
+  await persistFilters()
+  pushToast(t('filter.saved'), 'success')
+}
+
+/** Applies a preset, ignoring a category or tag that no longer exists. */
+function applyFilter(f) {
+  notebookFilter.value =
+    f.notebook === 'all' || notebooks.value.some((n) => n.id === f.notebook) ? f.notebook : 'all'
+  tagFilter.value = f.tag && allTags.value.some((tg) => tg.id === f.tag) ? f.tag : null
+  sortBy.value = f.sortBy
+  sortDir.value = f.sortDir
+}
+
+/** Removes a preset after confirmation (right-click on a preset pill). */
+async function deleteFilter(f) {
+  const ok = await confirmDialog({
+    title: t('filter.deleteTitle'),
+    message: t('filter.deleteConfirm', { name: f.name }),
+    danger: true
+  })
+  if (!ok) return
+  savedFilters.value = savedFilters.value.filter((s) => s.id !== f.id)
+  await persistFilters()
 }
 
 function titleOf(n) {
@@ -421,6 +500,33 @@ function closeWindow() {
         <span class="d" :style="{ background: getTagColor(tag.color).fg }"></span>
         {{ tag.name }}
         <span class="tcount">{{ tag.note_count }}</span>
+      </button>
+    </div>
+
+    <!-- Saved filters -->
+    <div
+      v-if="view === 'notes' && (savedFilters.length || canSaveFilter)"
+      class="savedfilter no-drag"
+    >
+      <i class="fa-solid fa-bookmark head" aria-hidden="true"></i>
+      <button
+        v-for="f in savedFilters"
+        :key="f.id"
+        class="pill"
+        :class="{ on: activeFilterId === f.id }"
+        :title="t('filter.deleteHint')"
+        @click="applyFilter(f)"
+        @contextmenu.prevent="deleteFilter(f)"
+      >
+        {{ f.name }}
+      </button>
+      <button
+        v-if="canSaveFilter"
+        class="pill add"
+        :title="t('filter.save')"
+        @click="saveCurrentFilter"
+      >
+        <i class="fa-solid fa-plus"></i> {{ t('filter.save') }}
       </button>
     </div>
 
@@ -861,6 +967,20 @@ function closeWindow() {
 .tag-pill .tcount {
   opacity: 0.5;
   font-size: 10px;
+}
+
+/* Saved filters */
+.savedfilter {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.savedfilter .head {
+  color: var(--x-text-faint);
+  font-size: 11px;
+  margin-right: 1px;
 }
 
 /* Multi-select bar */

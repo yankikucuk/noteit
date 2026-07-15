@@ -127,6 +127,14 @@ export default {
   'tag.deleteHint': 'Right-click: delete tag',
   'tag.deleteConfirm': 'Delete tag “{name}”? It is removed from every note.',
 
+  // Saved filters
+  'filter.save': 'Save filter',
+  'filter.savePrompt': 'Name this filter:',
+  'filter.saved': 'Filter saved',
+  'filter.deleteHint': 'Click: apply · Right-click: delete',
+  'filter.deleteTitle': 'Delete filter',
+  'filter.deleteConfirm': 'Delete the “{name}” filter?',
+
   // Categories & default profile
   'category.default': 'General',
   'profile.default': 'General',

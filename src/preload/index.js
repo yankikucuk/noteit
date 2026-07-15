@@ -98,6 +98,10 @@ const api = {
     set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
     open: () => ipcRenderer.invoke('settings:open')
   },
+  filters: {
+    list: () => ipcRenderer.invoke('filters:list'),
+    save: (filters) => ipcRenderer.invoke('filters:save', filters)
+  },
   locale: {
     current: () => ipcRenderer.invoke('locale:current')
   },
