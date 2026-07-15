@@ -77,7 +77,7 @@ function applyUpdate(fields) {
 }
 
 function onAction(action) {
-  if (action === 'alarm' || action === 'history') {
+  if (action === 'alarm' || action === 'history' || action === 'pomodoro') {
     window.api.options.action(action, noteId)
   } else if (action === 'duplicate') {
     window.api.notes.duplicate(noteId)

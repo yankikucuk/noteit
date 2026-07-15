@@ -86,6 +86,7 @@ export default {
   'options.explorer': 'Note Explorer',
   'options.copyMarkdown': 'Copy as Markdown',
   'options.copyLink': 'Copy link',
+  'options.pomodoro': 'Focus timer',
   'options.exportImage': 'Export as image',
   'options.print': 'Print',
   'options.export': 'Export',
@@ -137,6 +138,15 @@ export default {
   'agenda.overdue': 'Overdue',
   'agenda.today': 'Today',
   'agenda.tomorrow': 'Tomorrow',
+
+  // Pomodoro focus timer
+  'pomodoro.focus': 'Focus',
+  'pomodoro.break': 'Break',
+  'pomodoro.pause': 'Pause',
+  'pomodoro.resume': 'Resume',
+  'pomodoro.stop': 'Stop',
+  'pomodoro.breakTime': 'Time for a break',
+  'pomodoro.backToWork': 'Back to focus',
 
   // Tags
   'tag.searchOrCreate': 'Search or create a tag…',

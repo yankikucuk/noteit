@@ -339,10 +339,16 @@ export function registerIpc() {
     return true
   })
   handle('options:action', (_e, action, noteId) => {
-    // The alarm and history dialogs live inside the note window, so hand these
-    // requests back to it.
+    // The alarm/history dialogs and the focus timer live inside the note window,
+    // so hand these requests back to it.
     const channel =
-      action === 'alarm' ? 'note:open-alarm' : action === 'history' ? 'note:open-history' : null
+      action === 'alarm'
+        ? 'note:open-alarm'
+        : action === 'history'
+          ? 'note:open-history'
+          : action === 'pomodoro'
+            ? 'note:start-pomodoro'
+            : null
     if (channel) {
       closeOptionsWindow()
       const w = getNoteWindow(noteId)

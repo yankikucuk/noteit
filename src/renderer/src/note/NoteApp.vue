@@ -18,6 +18,7 @@ import TagPicker from '../ui/TagPicker.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import DialogHost from '../ui/DialogHost.vue'
 import { getColor } from '../shared/colors'
+import { pushToast } from '../shared/toast.js'
 import { t } from '../i18n.js'
 
 const noteId = Number(new URLSearchParams(window.location.search).get('id'))
@@ -43,6 +44,11 @@ const historyOpen = ref(false)
 const hasAlarm = ref(false)
 const shaking = ref(false)
 const snoozeOpen = ref(false)
+
+// Pomodoro focus timer (renderer-only, ephemeral). 25 min work, 5 min break.
+const POMODORO = { work: 25 * 60, break: 5 * 60 }
+const pomo = reactive({ active: false, phase: 'work', remaining: 0, paused: false })
+let pomoTimer = null
 const formatMenu = reactive({ open: false, x: 0, y: 0 })
 const tagPickerOpen = ref(false)
 const categoryMenuOpen = ref(false)
@@ -132,6 +138,8 @@ onMounted(async () => {
       historyOpen.value = true
     })
   )
+  // Start the focus timer when "Focus timer" is chosen in the options window
+  unsub.push(window.api.on('note:start-pomodoro', () => startPomodoro()))
 
   window.addEventListener('keydown', onKeydown)
 })
@@ -139,6 +147,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   unsub.forEach((fn) => fn && fn())
   window.removeEventListener('keydown', onKeydown)
+  stopPomodoro()
   flushSave()
 })
 
@@ -210,6 +219,48 @@ async function snoozeTomorrow() {
   d.setHours(9, 0, 0, 0)
   await window.api.alarms.snooze(noteId, d.getTime())
   snoozeOpen.value = false
+}
+
+// --- Pomodoro ---
+/** Remaining time as MM:SS. */
+const pomoClock = computed(() => {
+  const m = Math.floor(pomo.remaining / 60)
+  const s = pomo.remaining % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+})
+
+function tickPomodoro() {
+  if (!pomo.active || pomo.paused) return
+  if (pomo.remaining > 0) {
+    pomo.remaining--
+    return
+  }
+  // Phase finished: alternate work/break and signal the change.
+  pomo.phase = pomo.phase === 'work' ? 'break' : 'work'
+  pomo.remaining = POMODORO[pomo.phase]
+  shaking.value = true
+  setTimeout(() => (shaking.value = false), 900)
+  pushToast(pomo.phase === 'work' ? t('pomodoro.backToWork') : t('pomodoro.breakTime'), 'info')
+}
+
+function startPomodoro() {
+  pomo.active = true
+  pomo.phase = 'work'
+  pomo.remaining = POMODORO.work
+  pomo.paused = false
+  if (!pomoTimer) pomoTimer = setInterval(tickPomodoro, 1000)
+}
+
+function togglePomodoro() {
+  pomo.paused = !pomo.paused
+}
+
+function stopPomodoro() {
+  pomo.active = false
+  if (pomoTimer) {
+    clearInterval(pomoTimer)
+    pomoTimer = null
+  }
 }
 
 // Right-click on text shows the formatting menu at the cursor
@@ -324,6 +375,24 @@ function onTagsChanged(tags) {
         @change="onEditorChange"
       />
     </main>
+
+    <!-- Pomodoro focus timer bar -->
+    <div v-if="pomo.active" class="pomobar no-drag fade-in" :class="pomo.phase">
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span class="p-label">
+        {{ pomo.phase === 'work' ? t('pomodoro.focus') : t('pomodoro.break') }}
+      </span>
+      <span class="p-clock">{{ pomoClock }}</span>
+      <button
+        :title="pomo.paused ? t('pomodoro.resume') : t('pomodoro.pause')"
+        @click="togglePomodoro"
+      >
+        <i :class="pomo.paused ? 'fa-solid fa-play' : 'fa-solid fa-pause'" aria-hidden="true"></i>
+      </button>
+      <button class="p-stop" :title="t('pomodoro.stop')" @click="stopPomodoro">
+        <i class="fa-solid fa-stop" aria-hidden="true"></i>
+      </button>
+    </div>
 
     <!-- Snooze bar, shown after a reminder fires -->
     <div v-if="snoozeOpen" class="snoozebar no-drag fade-in">
@@ -484,6 +553,52 @@ function onTagsChanged(tags) {
 }
 
 /* Category + tag bar */
+.pomobar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: 11px;
+  border-top: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--bar));
+}
+.pomobar.break {
+  background: color-mix(in srgb, #2e9e6b 20%, var(--bar));
+}
+.pomobar > i {
+  color: var(--accent);
+}
+.pomobar.break > i {
+  color: #2e9e6b;
+}
+.pomobar .p-label {
+  flex: 1;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pomobar .p-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+.pomobar button {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 3px 5px;
+  border-radius: var(--r-sm);
+}
+.pomobar button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
 .snoozebar {
   flex: 0 0 auto;
   display: flex;

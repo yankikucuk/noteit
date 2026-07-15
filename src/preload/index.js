@@ -16,6 +16,7 @@ const ALLOWED_EVENTS = [
   'note:alarm-changed',
   'note:open-alarm',
   'note:open-history',
+  'note:start-pomodoro',
   'explorer:refresh',
   'locale:changed',
   'update:status',

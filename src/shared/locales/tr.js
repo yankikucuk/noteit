@@ -86,6 +86,7 @@ export default {
   'options.explorer': 'Not Gezgini',
   'options.copyMarkdown': 'Markdown olarak kopyala',
   'options.copyLink': 'Bağlantıyı kopyala',
+  'options.pomodoro': 'Odak zamanlayıcı',
   'options.exportImage': 'Görsel olarak dışa aktar',
   'options.print': 'Yazdır',
   'options.export': 'Dışa aktar',
@@ -137,6 +138,15 @@ export default {
   'agenda.overdue': 'Gecikmiş',
   'agenda.today': 'Bugün',
   'agenda.tomorrow': 'Yarın',
+
+  // Pomodoro odak zamanlayıcı
+  'pomodoro.focus': 'Odak',
+  'pomodoro.break': 'Mola',
+  'pomodoro.pause': 'Duraklat',
+  'pomodoro.resume': 'Sürdür',
+  'pomodoro.stop': 'Durdur',
+  'pomodoro.breakTime': 'Mola zamanı',
+  'pomodoro.backToWork': 'Odağa dön',
 
   // Tags
   'tag.searchOrCreate': 'Etiket ara veya oluştur…',
