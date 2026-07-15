@@ -198,28 +198,29 @@ export function getNote(id) {
 }
 
 /**
- * Notes shown on the desktop: active profile, not trashed, not hidden.
+ * Notes shown on the desktop: active profile, not trashed, not archived, not hidden.
  * @returns {object[]}
  */
 export function getVisibleNotes() {
   return attachTags(
     getDb()
       .prepare(
-        'SELECT * FROM notes WHERE profile_id = ? AND deleted_at IS NULL AND hidden = 0 ORDER BY created_at ASC'
+        'SELECT * FROM notes WHERE profile_id = ? AND deleted_at IS NULL AND archived_at IS NULL AND hidden = 0 ORDER BY created_at ASC'
       )
       .all(currentProfileId)
   )
 }
 
 /**
- * All non-trashed notes for the Explorer, most-recently-updated first.
+ * All active notes for the Explorer (not trashed, not archived), most-recently
+ * updated first.
  * @returns {object[]}
  */
 export function getActiveNotes() {
   return attachTags(
     getDb()
       .prepare(
-        'SELECT * FROM notes WHERE profile_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC'
+        'SELECT * FROM notes WHERE profile_id = ? AND deleted_at IS NULL AND archived_at IS NULL ORDER BY updated_at DESC'
       )
       .all(currentProfileId)
   )
@@ -234,6 +235,27 @@ export function getTrashedNotes() {
       )
       .all(currentProfileId)
   )
+}
+
+/** Archived notes for the active profile, most-recently archived first. @returns {object[]} */
+export function getArchivedNotes() {
+  return attachTags(
+    getDb()
+      .prepare(
+        'SELECT * FROM notes WHERE profile_id = ? AND archived_at IS NOT NULL AND deleted_at IS NULL ORDER BY archived_at DESC'
+      )
+      .all(currentProfileId)
+  )
+}
+
+/** Archives a note (removes it from the desktop and main list without trashing). @param {number} id */
+export function archiveNote(id) {
+  getDb().prepare('UPDATE notes SET archived_at = ?, hidden = 1 WHERE id = ?').run(Date.now(), id)
+}
+
+/** Restores an archived note to the active list. @param {number} id */
+export function unarchiveNote(id) {
+  getDb().prepare('UPDATE notes SET archived_at = NULL WHERE id = ?').run(id)
 }
 
 /** Whitelist of note columns that {@link updateNote} is allowed to write. */
@@ -451,7 +473,7 @@ export function searchNotes(query) {
       const rows = db
         .prepare(
           `SELECT n.id FROM notes_fts JOIN notes n ON n.id = notes_fts.rowid
-            WHERE notes_fts MATCH ? AND n.profile_id = ? AND n.deleted_at IS NULL`
+            WHERE notes_fts MATCH ? AND n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL`
         )
         .all(match, currentProfileId)
       for (const r of rows) ids.add(r.id)
@@ -462,7 +484,7 @@ export function searchNotes(query) {
         `SELECT DISTINCT n.id FROM notes n
            JOIN note_tags nt ON nt.note_id = n.id
            JOIN tags t ON t.id = nt.tag_id
-          WHERE t.name LIKE ? AND n.profile_id = ? AND n.deleted_at IS NULL`
+          WHERE t.name LIKE ? AND n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL`
       )
       .all(like, currentProfileId)
     for (const r of tagRows) ids.add(r.id)
@@ -474,7 +496,7 @@ export function searchNotes(query) {
           `SELECT DISTINCT n.* FROM notes n
              LEFT JOIN note_tags nt ON nt.note_id = n.id
              LEFT JOIN tags t ON t.id = nt.tag_id
-            WHERE n.profile_id = ? AND n.deleted_at IS NULL
+            WHERE n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL
               AND (n.plain_text LIKE ? OR t.name LIKE ?)
             ORDER BY n.updated_at DESC`
         )
@@ -602,7 +624,7 @@ export function getDueAlarms(now = Date.now()) {
     .prepare(
       `SELECT a.* FROM alarms a JOIN notes n ON n.id = a.note_id
         WHERE a.enabled = 1 AND a.trigger_at <= ?
-          AND n.profile_id = ? AND n.deleted_at IS NULL`
+          AND n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL`
     )
     .all(now, currentProfileId)
 }

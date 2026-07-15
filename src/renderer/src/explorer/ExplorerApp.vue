@@ -72,6 +72,8 @@ function onProfileSwitched() {
 async function refresh() {
   if (view.value === 'trash') {
     notes.value = await window.api.notes.listTrashed()
+  } else if (view.value === 'archive') {
+    notes.value = await window.api.notes.listArchived()
   } else if (query.value.trim()) {
     notes.value = await window.api.notes.search(query.value.trim())
   } else {
@@ -178,6 +180,14 @@ async function restore(n) {
   await window.api.notes.restore(n.id)
   refresh()
 }
+async function archive(n) {
+  await window.api.notes.archive(n.id)
+  refresh()
+}
+async function unarchive(n) {
+  await window.api.notes.unarchive(n.id)
+  refresh()
+}
 async function deleteForever(n) {
   const ok = await confirmDialog({
     message: t('explorer.deleteNoteConfirm'),
@@ -218,6 +228,22 @@ async function mergeSelected() {
   await window.api.notes.merge([...selected.value])
   selected.value = new Set()
   refresh()
+}
+
+/** Applies a bulk action to the current multi-selection. */
+async function bulk(action, value) {
+  if (!selected.value.size) return
+  await window.api.notes.bulk([...selected.value], action, value)
+  if (action === 'trash' || action === 'archive') selected.value = new Set()
+  refresh()
+}
+async function bulkTrash() {
+  const ok = await confirmDialog({
+    message: t('explorer.bulkTrashConfirm', { count: selected.value.size }),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (ok) bulk('trash')
 }
 
 // Notebooks (categories)
@@ -315,6 +341,9 @@ function closeWindow() {
       <button :class="{ on: view === 'notes' }" @click="switchView('notes')">
         <i class="fa-solid fa-layer-group"></i> {{ t('explorer.notes') }}
       </button>
+      <button :class="{ on: view === 'archive' }" @click="switchView('archive')">
+        <i class="fa-solid fa-box-archive"></i> {{ t('explorer.archive') }}
+      </button>
       <button :class="{ on: view === 'trash' }" @click="switchView('trash')">
         <i class="fa-solid fa-trash-can"></i> {{ t('explorer.trash') }}
       </button>
@@ -395,9 +424,35 @@ function closeWindow() {
     </div>
 
     <!-- Multi-select action bar -->
-    <div v-if="selected.size >= 2" class="merge-bar no-drag fade-in">
+    <div v-if="selected.size >= 1 && view === 'notes'" class="merge-bar no-drag fade-in">
       <span>{{ t('explorer.selected', { count: selected.size }) }}</span>
-      <button class="merge" @click="mergeSelected">
+      <select
+        class="bulk-cat"
+        @change="(bulk('category', Number($event.target.value)), ($event.target.value = ''))"
+      >
+        <option value="" disabled selected>{{ t('explorer.bulkCategory') }}</option>
+        <option v-for="nb in notebooks" :key="nb.id" :value="nb.id">{{ nb.name }}</option>
+      </select>
+      <IconBtn
+        icon="fa-solid fa-star"
+        size="sm"
+        :title="t('explorer.star')"
+        @click="bulk('star', 1)"
+      />
+      <IconBtn
+        icon="fa-solid fa-box-archive"
+        size="sm"
+        :title="t('explorer.archive')"
+        @click="bulk('archive')"
+      />
+      <IconBtn
+        icon="fa-solid fa-trash"
+        size="sm"
+        danger
+        :title="t('explorer.toTrash')"
+        @click="bulkTrash"
+      />
+      <button v-if="selected.size >= 2" class="merge" @click="mergeSelected">
         <i class="fa-solid fa-object-group"></i> {{ t('explorer.merge') }}
       </button>
       <button class="cancel" @click="selected = new Set()">
@@ -408,8 +463,24 @@ function closeWindow() {
     <!-- Note list -->
     <div ref="listEl" class="list no-drag" @scroll="onListScroll">
       <div v-if="visibleNotes.length === 0" class="empty">
-        <i :class="view === 'trash' ? 'fa-solid fa-trash-can' : 'fa-regular fa-note-sticky'"></i>
-        <p>{{ view === 'trash' ? t('explorer.emptyTrash') : t('explorer.emptyNotes') }}</p>
+        <i
+          :class="
+            view === 'trash'
+              ? 'fa-solid fa-trash-can'
+              : view === 'archive'
+                ? 'fa-solid fa-box-archive'
+                : 'fa-regular fa-note-sticky'
+          "
+        ></i>
+        <p>
+          {{
+            view === 'trash'
+              ? t('explorer.emptyTrash')
+              : view === 'archive'
+                ? t('explorer.emptyArchive')
+                : t('explorer.emptyNotes')
+          }}
+        </p>
         <button v-if="view === 'notes'" class="empty-add" @click="newNote">
           <i class="fa-solid fa-plus"></i> {{ t('explorer.firstNote') }}
         </button>
@@ -456,6 +527,33 @@ function closeWindow() {
               @click="toggleStar(n)"
             />
             <IconBtn
+              icon="fa-solid fa-box-archive"
+              size="sm"
+              :title="t('explorer.archive')"
+              @click="archive(n)"
+            />
+            <IconBtn
+              icon="fa-solid fa-trash"
+              size="sm"
+              :title="t('explorer.toTrash')"
+              danger
+              @click="trash(n)"
+            />
+          </template>
+          <template v-else-if="view === 'archive'">
+            <IconBtn
+              icon="fa-solid fa-up-right-from-square"
+              size="sm"
+              :title="t('explorer.open')"
+              @click="openNote(n)"
+            />
+            <IconBtn
+              icon="fa-solid fa-box-open"
+              size="sm"
+              :title="t('explorer.unarchive')"
+              @click="unarchive(n)"
+            />
+            <IconBtn
               icon="fa-solid fa-trash"
               size="sm"
               :title="t('explorer.toTrash')"
@@ -487,7 +585,7 @@ function closeWindow() {
       <button v-if="view === 'trash'" class="foot danger" @click="emptyTrash">
         <i class="fa-solid fa-trash-can"></i> {{ t('explorer.emptyTrashBtn') }}
       </button>
-      <template v-else>
+      <template v-else-if="view === 'notes'">
         <button
           class="foot lock"
           :class="{ on: allLocked }"
@@ -767,18 +865,33 @@ function closeWindow() {
 .merge-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
   margin: 0 12px 8px;
   padding: 8px 11px;
-  background: rgba(61, 126, 255, 0.09);
-  border: 1px solid rgba(61, 126, 255, 0.22);
+  background: color-mix(in srgb, var(--x-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--x-accent) 24%, transparent);
   border-radius: var(--r-md);
   font-size: 12px;
 }
 .merge-bar > span {
   flex: 1;
+  min-width: 60px;
   color: var(--x-accent);
   font-weight: 550;
+}
+.merge-bar .bulk-cat {
+  border: 1px solid var(--x-border);
+  background: var(--x-surface);
+  color: var(--x-text);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  padding: 3px 5px;
+  max-width: 110px;
+  cursor: pointer;
+}
+.merge-bar :deep(.icon-btn) {
+  color: var(--x-text-dim);
 }
 .merge-bar .merge {
   border: none;

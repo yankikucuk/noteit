@@ -122,6 +122,11 @@ export default {
 
   // Explorer
   'explorer.notes': 'Notes',
+  'explorer.archive': 'Archive',
+  'explorer.unarchive': 'Unarchive',
+  'explorer.emptyArchive': 'Archive is empty',
+  'explorer.bulkCategory': 'Move to…',
+  'explorer.bulkTrashConfirm': 'Move {count} selected notes to trash?',
   'explorer.trash': 'Trash',
   'explorer.search': 'Search notes…',
   'explorer.sortUpdated': 'Modified',

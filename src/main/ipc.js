@@ -181,6 +181,38 @@ export function registerIpc() {
     return true
   })
 
+  handle('notes:archived', () => repo.getArchivedNotes())
+  handle('note:archive', (_e, id) => {
+    repo.archiveNote(id)
+    hideNoteWindow(id)
+    refreshExplorer()
+    return true
+  })
+  handle('note:unarchive', (_e, id) => {
+    repo.unarchiveNote(id)
+    refreshExplorer()
+    return true
+  })
+
+  // Applies one action to many selected notes at once.
+  handle('notes:bulk', (_e, ids, action, value) => {
+    if (!Array.isArray(ids)) return { count: 0 }
+    for (const id of ids) {
+      if (action === 'trash') repo.trashNote(id)
+      else if (action === 'archive') repo.archiveNote(id)
+      else if (action === 'tag') repo.addTagToNote(id, value)
+      else if (action === 'color') repo.updateNote(id, { color: value })
+      else if (action === 'category') repo.updateNote(id, { notebook_id: value })
+      else if (action === 'star') repo.updateNote(id, { starred: value ? 1 : 0 })
+    }
+    for (const id of ids) {
+      if (action === 'trash' || action === 'archive') hideNoteWindow(id)
+      else sendToNote(id, 'note:updated', repo.getNote(id))
+    }
+    refreshExplorer()
+    return { count: ids.length }
+  })
+
   handle('note:delete-forever', (_e, id) => {
     hideNoteWindow(id)
     repo.deleteNoteForever(id)

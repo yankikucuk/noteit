@@ -78,7 +78,16 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
   })
 
   it('stamps the schema version via PRAGMA user_version', () => {
-    expect(db.getDb().pragma('user_version', { simple: true })).toBe(1)
+    expect(db.getDb().pragma('user_version', { simple: true })).toBe(2)
+  })
+
+  it('has the archived_at column (migration v2 applied)', () => {
+    const cols = db
+      .getDb()
+      .prepare('PRAGMA table_info(notes)')
+      .all()
+      .map((c) => c.name)
+    expect(cols).toContain('archived_at')
   })
 
   it('creates and reads a note with defaults', () => {
@@ -356,6 +365,22 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       expect(repo.getActiveNotes().every((n) => n.locked === 1)).toBe(true)
       repo.setAllNotesLocked(false)
       expect(repo.getActiveNotes().every((n) => n.locked === 0)).toBe(true)
+    })
+
+    it('archives and unarchives notes (excluded from the active list and search)', () => {
+      const note = repo.createNote({ content: '<p>archive me</p>', plain_text: 'archive me' })
+      expect(repo.getActiveNotes()).toHaveLength(1)
+      expect(repo.searchNotes('archive')).toHaveLength(1)
+
+      repo.archiveNote(note.id)
+      expect(repo.getActiveNotes()).toHaveLength(0)
+      expect(repo.getVisibleNotes()).toHaveLength(0)
+      expect(repo.searchNotes('archive')).toHaveLength(0)
+      expect(repo.getArchivedNotes().map((n) => n.id)).toEqual([note.id])
+
+      repo.unarchiveNote(note.id)
+      expect(repo.getActiveNotes()).toHaveLength(1)
+      expect(repo.getArchivedNotes()).toHaveLength(0)
     })
 
     it('empties the trash permanently', () => {

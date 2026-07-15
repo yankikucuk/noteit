@@ -122,6 +122,11 @@ export default {
 
   // Explorer
   'explorer.notes': 'Notlar',
+  'explorer.archive': 'Arşiv',
+  'explorer.unarchive': 'Arşivden çıkar',
+  'explorer.emptyArchive': 'Arşiv boş',
+  'explorer.bulkCategory': 'Taşı…',
+  'explorer.bulkTrashConfirm': 'Seçili {count} not çöpe taşınsın mı?',
   'explorer.trash': 'Çöp',
   'explorer.search': 'Notlarda ara…',
   'explorer.sortUpdated': 'Değiştirilme',

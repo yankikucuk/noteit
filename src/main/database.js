@@ -70,7 +70,7 @@ function openAndPrepare(dbPath) {
 }
 
 /** Latest schema version this build understands. Bump when adding a migration. */
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 
 /**
  * Ordered schema migrations for changes that cannot be expressed idempotently
@@ -85,7 +85,13 @@ const SCHEMA_VERSION = 1
  *
  * @type {Array<{version: number, up: (db: import('better-sqlite3').Database) => void}>}
  */
-const MIGRATIONS = []
+const MIGRATIONS = [
+  // v2: notes can be archived (kept out of the main list without trashing).
+  {
+    version: 2,
+    up: (d) => d.exec('ALTER TABLE notes ADD COLUMN archived_at INTEGER')
+  }
+]
 
 /**
  * Applies any pending migrations, then records the schema version in
