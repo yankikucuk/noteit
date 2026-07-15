@@ -41,6 +41,7 @@ const api = {
     unarchive: (id) => ipcRenderer.invoke('note:unarchive', id),
     bulk: (ids, action, value) => ipcRenderer.invoke('notes:bulk', ids, action, value),
     search: (q) => ipcRenderer.invoke('notes:search', q),
+    searchGlobal: (q) => ipcRenderer.invoke('notes:search-global', q),
     open: (id) => ipcRenderer.invoke('note:open', id),
     export: (id, format) => ipcRenderer.invoke('note:export', id, format),
     copyMarkdown: (id) => ipcRenderer.invoke('note:copy-markdown', id),

@@ -514,6 +514,27 @@ export function searchNotes(query) {
   )
 }
 
+/**
+ * Searches notes across *other* profiles for a global "find anything" jump.
+ * Password-protected profiles are excluded so their notes never leak; the active
+ * profile is excluded because those results come from {@link searchNotes}.
+ * @param {string} query - Search term.
+ * @returns {object[]} Matching notes, each with a `profile_name`.
+ */
+export function searchAllProfiles(query) {
+  const like = `%${query}%`
+  return getDb()
+    .prepare(
+      `SELECT n.*, p.name AS profile_name FROM notes n
+         JOIN profiles p ON p.id = n.profile_id
+        WHERE p.password_hash IS NULL AND p.id != ?
+          AND n.deleted_at IS NULL AND n.archived_at IS NULL
+          AND n.plain_text LIKE ?
+        ORDER BY n.updated_at DESC LIMIT 40`
+    )
+    .all(currentProfileId, like)
+}
+
 // ---------------------------------------------------------------------------
 // Notebooks (categories)
 // ---------------------------------------------------------------------------

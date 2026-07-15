@@ -146,6 +146,7 @@ export function registerIpc() {
   handle('notes:active', () => repo.getActiveNotes())
   handle('notes:trashed', () => repo.getTrashedNotes())
   handle('notes:search', (_e, q) => repo.searchNotes(q))
+  handle('notes:search-global', (_e, q) => repo.searchAllProfiles(q))
 
   handle('note:create', (_e, overrides) => {
     const note = repo.createNote(overrides || {})

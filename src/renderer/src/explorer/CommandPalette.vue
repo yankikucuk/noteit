@@ -19,6 +19,7 @@ const open = ref(false)
 const query = ref('')
 const activeIndex = ref(0)
 const noteResults = ref([])
+const globalResults = ref([])
 const inputEl = ref(null)
 
 /** Creates a category via a prompt, then asks the Explorer to reload. */
@@ -84,16 +85,24 @@ const filteredCommands = computed(() => {
   return COMMANDS.filter((c) => c.label().toLocaleLowerCase('tr').includes(q))
 })
 
-/** Flat list of selectable items: matching commands, then note results. */
+/** Flat list of selectable items: commands, then current- then other-profile notes. */
 const items = computed(() => [
   ...filteredCommands.value.map((c) => ({ type: 'command', command: c })),
-  ...noteResults.value.map((n) => ({ type: 'note', note: n }))
+  ...noteResults.value.map((n) => ({ type: 'note', note: n })),
+  ...globalResults.value.map((n) => ({ type: 'global', note: n }))
 ])
 
 watch(query, async (q) => {
   activeIndex.value = 0
-  noteResults.value =
-    q.trim().length >= 2 ? (await window.api.notes.search(q.trim())).slice(0, 8) : []
+  const term = q.trim()
+  if (term.length >= 2) {
+    // Current-profile notes, plus notes in other (unprotected) profiles.
+    noteResults.value = (await window.api.notes.search(term)).slice(0, 8)
+    globalResults.value = (await window.api.notes.searchGlobal(term)).slice(0, 6)
+  } else {
+    noteResults.value = []
+    globalResults.value = []
+  }
 })
 
 /** First non-empty line of a note, for the result label. */
@@ -105,6 +114,7 @@ function openPalette() {
   open.value = true
   query.value = ''
   noteResults.value = []
+  globalResults.value = []
   activeIndex.value = 0
   nextTick(() => inputEl.value?.focus())
 }
@@ -112,11 +122,18 @@ function closePalette() {
   open.value = false
 }
 
-function runItem(item) {
+async function runItem(item) {
   if (!item) return
   closePalette()
-  if (item.type === 'command') item.command.run()
-  else window.api.notes.open(item.note.id)
+  if (item.type === 'command') {
+    item.command.run()
+  } else if (item.type === 'global') {
+    // Jump across profiles: switch to the note's (unprotected) profile, then open.
+    await window.api.profiles.switch(item.note.profile_id)
+    window.api.notes.open(item.note.id)
+  } else {
+    window.api.notes.open(item.note.id)
+  }
 }
 
 function onKeydown(e) {
@@ -155,7 +172,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <div class="cmd-list">
         <button
           v-for="(item, i) in items"
-          :key="item.type === 'note' ? 'n' + item.note.id : 'c' + i"
+          :key="item.note ? item.type + item.note.id : 'c' + i"
           class="cmd-item"
           :class="{ active: i === activeIndex }"
           @mousemove="activeIndex = i"
@@ -168,7 +185,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <template v-else>
             <span class="stripe" :style="{ background: getColor(item.note.color).accent }"></span>
             <span class="lbl">{{ noteTitle(item.note) }}</span>
-            <span class="hint">{{ t('cmd.openNote') }}</span>
+            <span class="hint">
+              {{
+                item.type === 'global'
+                  ? t('cmd.inProfile', { name: item.note.profile_name })
+                  : t('cmd.openNote')
+              }}
+            </span>
           </template>
         </button>
         <div v-if="!items.length" class="cmd-empty">{{ t('cmd.empty') }}</div>

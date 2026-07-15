@@ -18,6 +18,7 @@ export default {
   'cmd.import': 'Import notes (JSON)',
   'cmd.importMarkdown': 'Import Markdown',
   'cmd.openNote': 'Open',
+  'cmd.inProfile': 'in {name}',
   'cmd.empty': 'No results',
 
   // Tray menu

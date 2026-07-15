@@ -18,6 +18,7 @@ export default {
   'cmd.import': 'Notları içe aktar (JSON)',
   'cmd.importMarkdown': 'Markdown içe aktar',
   'cmd.openNote': 'Aç',
+  'cmd.inProfile': '{name} profilinde',
   'cmd.empty': 'Sonuç yok',
 
   // Tray menu

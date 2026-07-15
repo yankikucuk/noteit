@@ -264,6 +264,23 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       expect(repo.createProfile('')).toBeNull()
     })
 
+    it('global search spans unprotected profiles but excludes protected and current', () => {
+      repo.createNote({ content: '<p>alpha here</p>', plain_text: 'alpha here' }) // profile 1
+      const open = repo.createProfile('Open')
+      const locked = repo.createProfile('Locked')
+      repo.setProfilePasswordHash(locked.id, 'salt:hash')
+      repo.setCurrentProfile(open.id)
+      repo.createNote({ content: '<p>alpha in open</p>', plain_text: 'alpha in open' })
+      repo.setCurrentProfile(locked.id)
+      repo.createNote({ content: '<p>alpha secret</p>', plain_text: 'alpha secret' })
+
+      repo.setCurrentProfile(1)
+      const results = repo.searchAllProfiles('alpha')
+      expect(results.map((n) => n.profile_name)).toContain('Open')
+      expect(results.map((n) => n.profile_name)).not.toContain('Locked') // protected excluded
+      expect(results.every((n) => n.profile_id === open.id)).toBe(true) // current profile excluded
+    })
+
     it('exposes the active profile id and default notebook', () => {
       expect(repo.getCurrentProfileId()).toBe(1)
       expect(repo.getDefaultNotebookId()).toBeTruthy()
