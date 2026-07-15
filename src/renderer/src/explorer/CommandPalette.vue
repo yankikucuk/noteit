@@ -11,6 +11,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { t } from '../i18n.js'
 import { promptDialog } from '../shared/dialogs.js'
 import { pushToast } from '../shared/toast.js'
+import { debounce } from '../shared/debounce.js'
 import { getColor } from '../shared/colors'
 
 const emit = defineEmits(['profiles', 'refresh'])
@@ -92,14 +93,31 @@ const items = computed(() => [
   ...globalResults.value.map((n) => ({ type: 'global', note: n }))
 ])
 
-watch(query, async (q) => {
+// Monotonic token so a slow response from an earlier query can't overwrite the
+// results of a newer one.
+let searchSeq = 0
+
+// Debounced so fast typing issues one pair of queries per pause, not per key.
+// The two searches run in parallel; results are dropped if superseded.
+const runSearch = debounce(async (term, seq) => {
+  const [local, global] = await Promise.all([
+    window.api.notes.search(term),
+    window.api.notes.searchGlobal(term)
+  ])
+  if (seq !== searchSeq) return
+  noteResults.value = local.slice(0, 8)
+  globalResults.value = global.slice(0, 6)
+}, 180)
+
+watch(query, (q) => {
   activeIndex.value = 0
   const term = q.trim()
+  searchSeq++
   if (term.length >= 2) {
     // Current-profile notes, plus notes in other (unprotected) profiles.
-    noteResults.value = (await window.api.notes.search(term)).slice(0, 8)
-    globalResults.value = (await window.api.notes.searchGlobal(term)).slice(0, 6)
+    runSearch(term, searchSeq)
   } else {
+    runSearch.cancel()
     noteResults.value = []
     globalResults.value = []
   }

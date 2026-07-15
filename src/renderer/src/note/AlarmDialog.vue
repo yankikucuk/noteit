@@ -1,7 +1,9 @@
 <script setup>
 /**
- * AlarmDialog — modal to set, change, or clear a note's reminder (date, time,
- * repeat mode). Reads/writes through the alarms API.
+ * AlarmDialog — modal to set, change, or clear a note's reminder. Supports a
+ * date and time plus a repeat mode: the daily/weekly/monthly/yearly presets or
+ * a custom rule (every N days, or specific weekdays). Reads/writes through the
+ * alarms API; custom rules are encoded by {@link resolveRepeatMode}.
  *
  * @prop {number} noteId - Note the alarm belongs to.
  * @emits changed - Boolean: whether the note now has an alarm.

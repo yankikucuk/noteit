@@ -1,8 +1,10 @@
 <script setup>
 /**
  * SettingsApp — root of the settings window. Reads/writes persisted preferences
- * (launch at login, default note color) through the settings API, and offers
- * backup/restore and data-folder access.
+ * through the settings API — language, theme, launch at login, unfocused-note
+ * fade, idle auto-lock, default note color, and the global shortcuts — and
+ * offers backup/restore, JSON/Markdown import, data-folder access, and the
+ * manual update check.
  */
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { COLOR_ORDER, COLORS } from '../shared/colors'

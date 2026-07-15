@@ -1,9 +1,12 @@
 <script setup>
 /**
- * ExplorerApp — root of the Explorer window. Lists the active profile's notes
- * and trash with search, sorting, category and tag filters; hosts the profile
- * switcher (ProfileMenu), multi-select merge, bulk lock, and backup/restore.
- * Re-fetches on the `explorer:refresh` event (also fired on profile switch).
+ * ExplorerApp — root of the Explorer window. Lists the active profile's notes,
+ * archive and trash with debounced search, sorting, and category/tag filters
+ * that can be stored as reusable presets (saved filters). Also hosts the
+ * command palette (Cmd/Ctrl+K), an agenda of upcoming reminders, the profile
+ * switcher (ProfileMenu), multi-select bulk actions, bulk lock, and
+ * backup/restore. Re-fetches on the `explorer:refresh` event (also fired on
+ * profile switch).
  */
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { getColor, getTagColor } from '../shared/colors'
@@ -16,6 +19,7 @@ import CommandPalette from './CommandPalette.vue'
 import { pushToast } from '../shared/toast.js'
 import { promptDialog, confirmDialog } from '../shared/dialogs.js'
 import { repeatLabel } from '../shared/repeatLabel.js'
+import { debounce } from '../shared/debounce.js'
 import { t, locale } from '../i18n.js'
 
 const view = ref('notes') // 'notes' | 'trash'
@@ -97,6 +101,17 @@ async function refresh() {
   await loadTags()
   await loadAgenda()
   selected.value = new Set([...selected.value].filter((id) => notes.value.some((n) => n.id === id)))
+}
+
+// Search-as-you-type collapses keystrokes into a single query instead of one
+// IPC round-trip per character.
+const onSearchInput = debounce(refresh, 200)
+
+/** Clears the search box and refreshes immediately, dropping any pending search. */
+function clearSearch() {
+  onSearchInput.cancel()
+  query.value = ''
+  refresh()
 }
 
 const visibleNotes = computed(() => {
@@ -506,8 +521,8 @@ function closeWindow() {
     <div v-if="view === 'notes'" class="controls no-drag">
       <div class="search">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input v-model="query" :placeholder="t('explorer.search')" @input="refresh" />
-        <button v-if="query" class="clear" @click="((query = ''), refresh())">
+        <input v-model="query" :placeholder="t('explorer.search')" @input="onSearchInput" />
+        <button v-if="query" class="clear" @click="clearSearch">
           <i class="fa-solid fa-circle-xmark"></i>
         </button>
       </div>

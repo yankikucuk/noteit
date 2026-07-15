@@ -7,8 +7,8 @@
  * @prop {object} note - The note being edited.
  * @prop {boolean} [hasAlarm] - Whether the note has an active reminder.
  * @emits update - Partial field changes to persist.
- * @emits action - Named action (alarm, history, duplicate, explorer, copy-md, png,
- *   print, export:*, trash).
+ * @emits action - Named action (alarm, history, duplicate, explorer, copy-md,
+ *   copy-link, pomodoro, png, print, export:*, trash).
  * @emits close - Request to close the menu.
  */
 import { computed } from 'vue'

@@ -2,9 +2,10 @@
 /**
  * OptionsApp — root of the standalone options popup window. Loads the note by
  * `?id=`, renders OptionsMenu with the note's color theme, reports its measured
- * size back to the main process for window sizing, and routes menu actions
- * (color/opacity/toggles persist immediately; alarm is delegated to the note
- * window; duplicate/explorer/trash close the popup).
+ * size back to the main process for window sizing, and routes menu actions:
+ * color/opacity/toggles persist immediately; alarm, history and the pomodoro
+ * timer are delegated to the note window; copy/export/print run in the main
+ * process; duplicate/explorer/trash close the popup.
  */
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import OptionsMenu from '../note/OptionsMenu.vue'

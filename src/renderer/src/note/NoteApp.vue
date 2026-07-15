@@ -2,8 +2,10 @@
 /**
  * NoteApp — root of a single sticky-note window. Owns the note state, the
  * title bar (new/collapse/options/close), the TipTap editor with debounced
- * autosave, the right-click format menu, and the category/tag footer. Reacts to
- * `note:updated` and `note:open-alarm` events from the main process.
+ * autosave, the right-click format menu, the category/tag footer, the snooze
+ * bar shown when a reminder fires, and a per-note pomodoro focus timer. Reacts
+ * to `note:updated`, `note:open-alarm`, `note:open-history`, `note:alarm-fired`
+ * and `note:start-pomodoro` events from the main process.
  *
  * The note id comes from the `?id=` query parameter of the window URL.
  */
@@ -209,10 +211,17 @@ function focusEditor() {
 // --- Snooze ---
 // Shown after a reminder fires so it can be pushed back without reopening the
 // alarm dialog. Presets re-arm the alarm; "tomorrow" targets 9am local time.
+
+/**
+ * Re-arms the reminder a fixed number of minutes from now.
+ * @param {number} minutes - Delay before it fires again.
+ */
 async function snooze(minutes) {
   await window.api.alarms.snooze(noteId, Date.now() + minutes * 60 * 1000)
   snoozeOpen.value = false
 }
+
+/** Re-arms the reminder for 9am tomorrow (local time). */
 async function snoozeTomorrow() {
   const d = new Date()
   d.setDate(d.getDate() + 1)
@@ -229,6 +238,7 @@ const pomoClock = computed(() => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 
+/** One-second tick: counts down, then alternates work/break and signals the change. */
 function tickPomodoro() {
   if (!pomo.active || pomo.paused) return
   if (pomo.remaining > 0) {
@@ -243,6 +253,7 @@ function tickPomodoro() {
   pushToast(pomo.phase === 'work' ? t('pomodoro.backToWork') : t('pomodoro.breakTime'), 'info')
 }
 
+/** Starts (or restarts) the focus timer at the beginning of a work phase. */
 function startPomodoro() {
   pomo.active = true
   pomo.phase = 'work'
@@ -251,10 +262,12 @@ function startPomodoro() {
   if (!pomoTimer) pomoTimer = setInterval(tickPomodoro, 1000)
 }
 
+/** Pauses or resumes the countdown. */
 function togglePomodoro() {
   pomo.paused = !pomo.paused
 }
 
+/** Stops the timer and clears its interval. */
 function stopPomodoro() {
   pomo.active = false
   if (pomoTimer) {
