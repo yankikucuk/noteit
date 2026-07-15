@@ -375,6 +375,18 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       repo.removeTagFromNote(note.id, tag.id)
       expect(repo.getNote(note.id).tags).toHaveLength(0)
     })
+
+    it('deletes a tag entirely and cascades to note associations', () => {
+      const a = repo.createNote({})
+      const b = repo.createNote({})
+      const tag = repo.createTag('Gone', 'red')
+      repo.addTagToNote(a.id, tag.id)
+      repo.addTagToNote(b.id, tag.id)
+      repo.deleteTag(tag.id)
+      expect(repo.listTags().some((t) => t.id === tag.id)).toBe(false)
+      expect(repo.getNote(a.id).tags).toHaveLength(0)
+      expect(repo.getNote(b.id).tags).toHaveLength(0)
+    })
   })
 
   describe('settings', () => {

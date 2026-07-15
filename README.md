@@ -92,10 +92,25 @@ with electron-builder (`electron-builder.yml`).
 **Build each platform on that platform.** better-sqlite3 is a native module, so
 its binary must be compiled for the target OS/arch — you cannot reliably produce
 a Windows or Linux installer from macOS. Run each `build:*` script on its own OS,
-or let CI do it: **[`.github/workflows/release.yml`](.github/workflows/release.yml)**
-builds all three on macOS, Windows and Linux runners (each rebuilds the native
-module for its platform) and uploads the installers as artifacts. Trigger it by
-pushing a `v*` tag or from the Actions tab.
+or let CI do it.
+
+### Releasing
+
+The version comes from `package.json`, not the git tag — bump it, then tag:
+
+```bash
+npm run release:patch   # 1.0.0 -> 1.0.1  (also :minor / :major)
+```
+
+This runs lint + tests, bumps the version, commits, creates a `v<version>` tag
+and pushes it. The tag triggers **[`.github/workflows/release.yml`](.github/workflows/release.yml)**,
+which builds each platform on its own runner (macOS arm64, Windows x64 + native
+arm64, Linux x64), merges the two Windows `latest.yml` files into one, and
+publishes a GitHub Release with all installers and update metadata.
+
+Installed apps auto-update from those GitHub releases (electron-updater checks on
+launch and every few hours). Caveats: **macOS auto-update requires signing** (see
+below); Linux updates only the AppImage (not deb).
 
 Code signing / notarization and auto-update publishing are configured in
 `electron-builder.yml` but require your own certificates and credentials — see

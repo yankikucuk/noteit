@@ -10,8 +10,10 @@ import { getColor, getTagColor } from '../shared/colors'
 import IconBtn from '../ui/IconBtn.vue'
 import TagChips from '../ui/TagChips.vue'
 import ToastHost from '../ui/ToastHost.vue'
+import DialogHost from '../ui/DialogHost.vue'
 import ProfileMenu from './ProfileMenu.vue'
 import { pushToast } from '../shared/toast.js'
+import { promptDialog, confirmDialog } from '../shared/dialogs.js'
 import { t, locale } from '../i18n.js'
 
 const view = ref('notes') // 'notes' | 'trash'
@@ -177,13 +179,23 @@ async function restore(n) {
   refresh()
 }
 async function deleteForever(n) {
-  if (confirm(t('explorer.deleteNoteConfirm'))) {
+  const ok = await confirmDialog({
+    message: t('explorer.deleteNoteConfirm'),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (ok) {
     await window.api.notes.deleteForever(n.id)
     refresh()
   }
 }
 async function emptyTrash() {
-  if (confirm(t('explorer.emptyTrashConfirm'))) {
+  const ok = await confirmDialog({
+    message: t('explorer.emptyTrashConfirm'),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (ok) {
     await window.api.trash.empty()
     refresh()
   }
@@ -210,24 +222,47 @@ async function mergeSelected() {
 
 // Notebooks (categories)
 async function addNotebook() {
-  const name = prompt(t('category.newPrompt'))
-  if (name && name.trim()) {
-    await window.api.notebooks.create(name.trim())
+  const name = await promptDialog({
+    title: t('category.newPrompt'),
+    confirmLabel: t('common.ok')
+  })
+  if (name) {
+    await window.api.notebooks.create(name)
     loadNotebooks()
   }
 }
 async function renameNotebook(nb) {
-  const name = prompt(t('category.renamePrompt'), nb.name)
-  if (name && name.trim()) {
-    await window.api.notebooks.rename(nb.id, name.trim())
+  const name = await promptDialog({ title: t('category.renamePrompt'), value: nb.name })
+  if (name) {
+    await window.api.notebooks.rename(nb.id, name)
     loadNotebooks()
   }
 }
 async function removeNotebook(nb) {
-  if (confirm(t('category.deleteConfirm', { name: nb.name }))) {
+  const ok = await confirmDialog({
+    message: t('category.deleteConfirm', { name: nb.name }),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (ok) {
     await window.api.notebooks.remove(nb.id)
     if (notebookFilter.value === nb.id) notebookFilter.value = 'all'
     loadNotebooks()
+  }
+}
+
+// Delete a tag entirely from the profile (right-click on a tag filter pill).
+async function removeTag(tag) {
+  const ok = await confirmDialog({
+    message: t('tag.deleteConfirm', { name: tag.name }),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (ok) {
+    await window.api.tags.remove(tag.id)
+    if (tagFilter.value === tag.id) tagFilter.value = null
+    loadTags()
+    refresh()
   }
 }
 
@@ -344,12 +379,14 @@ function closeWindow() {
         :key="tag.id"
         class="tag-pill"
         :class="{ on: tagFilter === tag.id }"
+        :title="t('tag.deleteHint')"
         :style="
           tagFilter === tag.id
             ? { background: getTagColor(tag.color).bg, color: getTagColor(tag.color).fg }
             : {}
         "
         @click="toggleTagFilter(tag.id)"
+        @contextmenu.prevent="removeTag(tag)"
       >
         <span class="d" :style="{ background: getTagColor(tag.color).fg }"></span>
         {{ tag.name }}
@@ -472,6 +509,7 @@ function closeWindow() {
     </footer>
 
     <ToastHost />
+    <DialogHost />
   </div>
 </template>
 

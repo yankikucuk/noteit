@@ -1,5 +1,10 @@
 /** English translations. Keys are shared with every other locale file. */
 export default {
+  // Common
+  'common.ok': 'OK',
+  'common.cancel': 'Cancel',
+  'common.delete': 'Delete',
+
   // Tray menu
   'tray.newNote': 'New Note',
   'tray.newFromClipboard': 'New Note from Clipboard',
@@ -63,8 +68,10 @@ export default {
   'options.history': 'History',
   'options.duplicate': 'Duplicate',
   'options.explorer': 'Note Explorer',
+  'options.copyMarkdown': 'Copy as Markdown',
   'options.export': 'Export',
   'options.trash': 'Move to trash',
+  'options.stats': '{words} words · {chars} characters',
 
   // Version history
   'history.title': 'Version history',
@@ -98,6 +105,9 @@ export default {
   'tag.create': 'Create “{name}”',
   'tag.empty': 'No tags',
   'tag.remove': 'Remove',
+  'tag.delete': 'Delete tag',
+  'tag.deleteHint': 'Right-click: delete tag',
+  'tag.deleteConfirm': 'Delete tag “{name}”? It is removed from every note.',
 
   // Categories & default profile
   'category.default': 'General',
@@ -214,6 +224,7 @@ export default {
 
   // Toast notifications
   'toast.backupCreated': 'Backup created',
+  'toast.copied': 'Copied to clipboard',
   'toast.exported': '{count} notes exported',
   'toast.imported': '{count} notes imported',
   'toast.versionRestored': 'Note restored to an earlier version',

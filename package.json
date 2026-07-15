@@ -28,11 +28,16 @@
     "build:mac": "electron-vite build && electron-builder --mac --publish never",
     "build:win": "electron-vite build && electron-builder --win --x64 --publish never",
     "build:win-arm": "electron-vite build && electron-builder --win --arm64 --publish never",
-    "build:linux": "electron-vite build && electron-builder --linux --publish never"
+    "build:linux": "electron-vite build && electron-builder --linux --publish never",
+    "preversion": "npm run lint && npm test",
+    "release:patch": "npm version patch -m \"Release %s\" && git push --follow-tags",
+    "release:minor": "npm version minor -m \"Release %s\" && git push --follow-tags",
+    "release:major": "npm version major -m \"Release %s\" && git push --follow-tags"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
     "@fortawesome/fontawesome-free": "^7.3.0",
+    "@tiptap/extension-code-block-lowlight": "^3.27.4",
     "@tiptap/extension-highlight": "^3.27.4",
     "@tiptap/extension-image": "^3.27.4",
     "@tiptap/extension-link": "^3.27.4",
@@ -48,6 +53,7 @@
     "better-sqlite3": "^12.11.1",
     "electron-log": "^5.4.4",
     "electron-updater": "^6.8.9",
+    "lowlight": "^3.3.0",
     "vue": "^3.5.39"
   },
   "devDependencies": {
@@ -60,6 +66,7 @@
     "eslint": "^10.7.0",
     "eslint-plugin-vue": "^10.9.2",
     "globals": "^17.7.0",
+    "js-yaml": "^4.1.0",
     "prettier": "^3.9.5",
     "sharp": "^0.35.3",
     "vite": "^8.1.4",

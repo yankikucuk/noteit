@@ -122,7 +122,7 @@ async function clear() {
   z-index: 100;
 }
 .dialog {
-  width: 232px;
+  width: min(232px, calc(100vw - 20px));
   background: var(--bar);
   color: var(--text);
   border-radius: 12px;
@@ -168,11 +168,11 @@ label > span {
 }
 input,
 select {
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
   border-radius: 6px;
   padding: 4px 7px;
-  background: rgba(255, 255, 255, 0.55);
-  color: #222;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
   font-size: 12px;
   font-family: inherit;
 }

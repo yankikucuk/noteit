@@ -105,7 +105,7 @@ async function restore(version) {
   z-index: 100;
 }
 .dialog {
-  width: 250px;
+  width: min(250px, calc(100vw - 20px));
   max-height: 80vh;
   display: flex;
   flex-direction: column;

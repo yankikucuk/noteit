@@ -66,6 +66,13 @@ button {
   font-family: inherit;
 }
 
+/* Visible keyboard-focus indicator (shown for keyboard navigation, not mouse
+   clicks). Themed to the note accent in note windows, the app accent elsewhere. */
+:focus-visible {
+  outline: 2px solid var(--accent, var(--x-accent, #3d7eff));
+  outline-offset: 2px;
+}
+
 /* --- Thin scrollbars --- */
 ::-webkit-scrollbar {
   width: 9px;
@@ -139,7 +146,7 @@ button {
   cursor: pointer;
 }
 .ProseMirror code {
-  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, currentColor 10%, transparent);
   border-radius: 4px;
   padding: 0.1em 0.35em;
   font-size: 0.88em;
@@ -156,7 +163,7 @@ button {
   box-decoration-break: clone;
 }
 .ProseMirror pre {
-  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, currentColor 10%, transparent);
   border-radius: 6px;
   padding: 0.6em 0.8em;
   margin: 0.4em 0;
@@ -169,6 +176,58 @@ button {
   background: none;
   padding: 0;
   font-size: inherit;
+}
+
+/* Code-block syntax highlighting (lowlight / highlight.js token classes).
+   Medium-saturation palette chosen to stay legible on both light and dark
+   (charcoal) note colors. */
+.ProseMirror pre .hljs-comment,
+.ProseMirror pre .hljs-quote {
+  color: #7d828c;
+  font-style: italic;
+}
+.ProseMirror pre .hljs-keyword,
+.ProseMirror pre .hljs-selector-tag,
+.ProseMirror pre .hljs-literal,
+.ProseMirror pre .hljs-doctag {
+  color: #b06fd6;
+}
+.ProseMirror pre .hljs-string,
+.ProseMirror pre .hljs-attr,
+.ProseMirror pre .hljs-regexp,
+.ProseMirror pre .hljs-addition {
+  color: #5a9e57;
+}
+.ProseMirror pre .hljs-number,
+.ProseMirror pre .hljs-built_in,
+.ProseMirror pre .hljs-symbol,
+.ProseMirror pre .hljs-bullet {
+  color: #c07a3e;
+}
+.ProseMirror pre .hljs-title,
+.ProseMirror pre .hljs-section,
+.ProseMirror pre .hljs-name {
+  color: #3f8ad1;
+}
+.ProseMirror pre .hljs-type,
+.ProseMirror pre .hljs-attribute {
+  color: #b9902b;
+}
+.ProseMirror pre .hljs-tag,
+.ProseMirror pre .hljs-variable,
+.ProseMirror pre .hljs-template-variable,
+.ProseMirror pre .hljs-deletion {
+  color: #d15656;
+}
+.ProseMirror pre .hljs-meta,
+.ProseMirror pre .hljs-link {
+  color: #3aa5ac;
+}
+.ProseMirror pre .hljs-emphasis {
+  font-style: italic;
+}
+.ProseMirror pre .hljs-strong {
+  font-weight: 700;
 }
 .ProseMirror img {
   max-width: 100%;

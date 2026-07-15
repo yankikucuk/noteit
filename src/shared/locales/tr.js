@@ -1,5 +1,10 @@
 /** Turkish translations. Keys are shared with every other locale file. */
 export default {
+  // Common
+  'common.ok': 'Tamam',
+  'common.cancel': 'İptal',
+  'common.delete': 'Sil',
+
   // Tray menu
   'tray.newNote': 'Yeni Not',
   'tray.newFromClipboard': 'Panodan Yeni Not',
@@ -63,8 +68,10 @@ export default {
   'options.history': 'Geçmiş',
   'options.duplicate': 'Çoğalt',
   'options.explorer': 'Not Gezgini',
+  'options.copyMarkdown': 'Markdown olarak kopyala',
   'options.export': 'Dışa aktar',
   'options.trash': 'Çöpe taşı',
+  'options.stats': '{words} kelime · {chars} karakter',
 
   // Version history
   'history.title': 'Sürüm geçmişi',
@@ -98,6 +105,9 @@ export default {
   'tag.create': '“{name}” oluştur',
   'tag.empty': 'Etiket yok',
   'tag.remove': 'Kaldır',
+  'tag.delete': 'Etiketi sil',
+  'tag.deleteHint': 'Sağ tık: etiketi sil',
+  'tag.deleteConfirm': '“{name}” etiketi silinsin mi? Tüm notlardan kaldırılır.',
 
   // Categories & default profile
   'category.default': 'Genel',
@@ -217,6 +227,7 @@ export default {
 
   // Toast notifications
   'toast.backupCreated': 'Yedek oluşturuldu',
+  'toast.copied': 'Panoya kopyalandı',
   'toast.exported': '{count} not dışa aktarıldı',
   'toast.imported': '{count} not içe aktarıldı',
   'toast.versionRestored': 'Not önceki bir sürüme geri yüklendi',

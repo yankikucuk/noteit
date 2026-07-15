@@ -7,18 +7,25 @@
  * @prop {object} note - The note being edited.
  * @prop {boolean} [hasAlarm] - Whether the note has an active reminder.
  * @emits update - Partial field changes to persist.
- * @emits action - Named action (alarm, history, duplicate, explorer, export:*, trash).
+ * @emits action - Named action (alarm, history, duplicate, explorer, copy-md, export:*, trash).
  * @emits close - Request to close the menu.
  */
+import { computed } from 'vue'
 import { COLOR_ORDER, COLORS } from '../shared/colors'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import { t } from '../i18n.js'
 
-defineProps({
+const props = defineProps({
   note: { type: Object, required: true },
   hasAlarm: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update', 'action', 'close'])
+
+/** Word and character counts for the note's plain text. */
+const stats = computed(() => {
+  const text = (props.note.plain_text || '').trim()
+  return { words: text ? text.split(/\s+/).length : 0, chars: text.length }
+})
 
 function setColor(name) {
   emit('update', { color: name })
@@ -111,12 +118,17 @@ function setToggle(field, val) {
       <i class="fa-solid fa-table-list icn"></i>
       <span>{{ t('options.explorer') }}</span>
     </button>
+    <button class="item" @click="emit('action', 'copy-md')">
+      <i class="fa-solid fa-copy icn"></i>
+      <span>{{ t('options.copyMarkdown') }}</span>
+    </button>
 
     <div class="export-row">
       <i class="fa-solid fa-file-export icn"></i>
       <span>{{ t('options.export') }}</span>
       <span class="chips">
         <button @click="emit('action', 'export:txt')">TXT</button>
+        <button @click="emit('action', 'export:md')">MD</button>
         <button @click="emit('action', 'export:rtf')">RTF</button>
         <button @click="emit('action', 'export:html')">HTML</button>
       </span>
@@ -128,6 +140,8 @@ function setToggle(field, val) {
       <i class="fa-solid fa-trash icn"></i>
       <span>{{ t('options.trash') }}</span>
     </button>
+
+    <div class="stats">{{ t('options.stats', { words: stats.words, chars: stats.chars }) }}</div>
   </div>
 </template>
 
@@ -261,5 +275,12 @@ function setToggle(field, val) {
 }
 .danger:hover {
   background: rgba(224, 72, 72, 0.13);
+}
+.stats {
+  text-align: center;
+  font-size: 10.5px;
+  opacity: 0.55;
+  padding: 6px 4px 2px;
+  font-variant-numeric: tabular-nums;
 }
 </style>

@@ -9,6 +9,7 @@
  */
 import { ref, onMounted } from 'vue'
 import { t } from '../i18n.js'
+import { promptDialog, confirmDialog } from '../shared/dialogs.js'
 
 const emit = defineEmits(['close', 'switched'])
 
@@ -76,9 +77,9 @@ function openSettings(p) {
 }
 
 async function renameProfile() {
-  const name = prompt(t('profile.renamePrompt'), target.value.name)
-  if (name && name.trim()) {
-    await window.api.profiles.rename(target.value.id, name.trim())
+  const name = await promptDialog({ title: t('profile.renamePrompt'), value: target.value.name })
+  if (name) {
+    await window.api.profiles.rename(target.value.id, name)
     await load()
     target.value = profiles.value.find((p) => p.id === target.value.id)
   }
@@ -96,7 +97,12 @@ async function deleteProfile() {
     error.value = t('profile.lastCantDelete')
     return
   }
-  if (!confirm(t('profile.deleteConfirm', { name: target.value.name }))) return
+  const ok = await confirmDialog({
+    message: t('profile.deleteConfirm', { name: target.value.name }),
+    confirmLabel: t('common.delete'),
+    danger: true
+  })
+  if (!ok) return
   const r = await window.api.profiles.remove(target.value.id, pwInput.value)
   if (r.ok) {
     await load()

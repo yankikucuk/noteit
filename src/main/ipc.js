@@ -7,7 +7,7 @@
  * note windows and the Explorer stay in sync.
  */
 
-import { ipcMain, dialog, BrowserWindow, app, shell } from 'electron'
+import { ipcMain, dialog, BrowserWindow, app, shell, clipboard } from 'electron'
 import { writeFileSync, readFileSync, copyFileSync, existsSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import * as repo from './repository.js'
@@ -35,7 +35,7 @@ import { t, setLocale, getLocale } from './i18n.js'
 import { refreshTrayMenu } from './tray.js'
 import { buildApplicationMenu } from './menu.js'
 import { checkForUpdatesManually } from './updater.js'
-import { htmlToPlainText, plainTextToRtf } from '../shared/exportFormat.js'
+import { htmlToPlainText, plainTextToRtf, htmlToMarkdown } from '../shared/exportFormat.js'
 
 /**
  * Applies a language change everywhere: main-process locale, tray and app
@@ -236,6 +236,13 @@ export function registerIpc() {
   // --- Tags -----------------------------------------------------------------
   handle('tags:list', () => repo.listTags())
   handle('tag:create', (_e, name, color) => repo.createTag(name, color))
+  handle('tag:delete', (_e, tagId) => {
+    repo.deleteTag(tagId)
+    // Refresh any open note windows so the removed tag disappears from their chips.
+    for (const id of getAllNoteWindowIds()) sendToNote(id, 'note:updated', repo.getNote(id))
+    refreshExplorer()
+    return true
+  })
   handle('note:add-tag', (_e, noteId, tagId) => {
     repo.addTagToNote(noteId, tagId)
     const note = repo.getNote(noteId)
@@ -407,7 +414,7 @@ export function registerIpc() {
   handle('note:export', async (_e, id, format) => {
     const note = repo.getNote(id)
     if (!note) return { ok: false }
-    const ext = format === 'rtf' ? 'rtf' : format === 'html' ? 'html' : 'txt'
+    const ext = ['rtf', 'html', 'md'].includes(format) ? format : 'txt'
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: t('dialog.exportTitle'),
       defaultPath: join(app.getPath('documents'), `note-${id}.${ext}`),
@@ -417,11 +424,21 @@ export function registerIpc() {
     const data =
       ext === 'html'
         ? note.content
-        : ext === 'rtf'
-          ? plainTextToRtf(htmlToPlainText(note.content))
-          : htmlToPlainText(note.content)
+        : ext === 'md'
+          ? htmlToMarkdown(note.content)
+          : ext === 'rtf'
+            ? plainTextToRtf(htmlToPlainText(note.content))
+            : htmlToPlainText(note.content)
     writeFileSync(filePath, data, 'utf8')
     return { ok: true, path: filePath }
+  })
+
+  // Copies the note as Markdown to the system clipboard.
+  handle('note:copy-markdown', (_e, id) => {
+    const note = repo.getNote(id)
+    if (!note) return { ok: false }
+    clipboard.writeText(htmlToMarkdown(note.content))
+    return { ok: true }
   })
 
   // --- Bulk data import / export (JSON) -------------------------------------

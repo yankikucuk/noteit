@@ -11,6 +11,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import IconBtn from '../ui/IconBtn.vue'
 import { t, locale } from '../i18n.js'
+import { promptDialog } from '../shared/dialogs.js'
 
 const props = defineProps({
   editor: { type: Object, default: null },
@@ -47,18 +48,18 @@ function toggle(cmd) {
   if (props.editor) cmd(chain()).run()
 }
 
-function setLink() {
+async function setLink() {
   if (!props.editor) return
   const prev = props.editor.getAttributes('link').href
-  const url = window.prompt(t('format.linkPrompt'), prev || 'https://')
+  const url = await promptDialog({ title: t('format.linkPrompt'), value: prev || 'https://' })
   if (url === null) return
   if (url === '') return chain().unsetLink().run()
   chain().extendMarkRange('link').setLink({ href: url }).run()
 }
 
-function insertImage() {
+async function insertImage() {
   if (!props.editor) return
-  const url = window.prompt(t('format.imagePrompt'), 'https://')
+  const url = await promptDialog({ title: t('format.imagePrompt'), value: 'https://' })
   if (!url) return
   chain().setImage({ src: url }).run()
 }

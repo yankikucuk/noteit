@@ -479,7 +479,7 @@ export function openExplorer() {
   explorerWindow = new BrowserWindow({
     width: 384,
     height: 580,
-    minWidth: 300,
+    minWidth: 340,
     minHeight: 360,
     title: t('window.explorer'),
     show: false,

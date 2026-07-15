@@ -675,6 +675,15 @@ export function removeTagFromNote(noteId, tagId) {
   getDb().prepare('DELETE FROM note_tags WHERE note_id = ? AND tag_id = ?').run(noteId, tagId)
 }
 
+/**
+ * Permanently deletes a tag from the active profile. Its note associations are
+ * removed automatically (note_tags cascades on the tag foreign key).
+ * @param {number} tagId - Tag id.
+ */
+export function deleteTag(tagId) {
+  getDb().prepare('DELETE FROM tags WHERE id = ? AND profile_id = ?').run(tagId, currentProfileId)
+}
+
 // ---------------------------------------------------------------------------
 // Import / export (portable JSON)
 // ---------------------------------------------------------------------------

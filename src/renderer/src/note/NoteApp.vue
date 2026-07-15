@@ -16,6 +16,7 @@ import IconBtn from '../ui/IconBtn.vue'
 import TagChips from '../ui/TagChips.vue'
 import TagPicker from '../ui/TagPicker.vue'
 import ToastHost from '../ui/ToastHost.vue'
+import DialogHost from '../ui/DialogHost.vue'
 import { getColor } from '../shared/colors'
 import { t } from '../i18n.js'
 
@@ -376,11 +377,16 @@ function onTagsChanged(tags) {
     />
 
     <ToastHost />
+    <DialogHost />
   </div>
 </template>
 
 <style scoped>
 .note {
+  /* Theme-adaptive hover/active tints so feedback stays visible on dark
+     (charcoal) notes as well as light ones. */
+  --hover: color-mix(in srgb, var(--text) 12%, transparent);
+  --hover-strong: color-mix(in srgb, var(--text) 22%, transparent);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -416,7 +422,7 @@ function onTagsChanged(tags) {
   align-items: center;
   gap: 9px;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.62;
 }
 .badge {
   font-size: 9.5px;
@@ -482,7 +488,7 @@ function onTagsChanged(tags) {
 .cat-btn:hover,
 .cat-btn.on {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--hover);
 }
 .cat-btn > i {
   font-size: 10px;
@@ -531,7 +537,7 @@ function onTagsChanged(tags) {
   text-align: left;
 }
 .cat-menu button:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--hover);
 }
 .cat-menu button > span {
   flex: 1;

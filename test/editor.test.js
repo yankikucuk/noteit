@@ -11,7 +11,15 @@ describe('buildExtensions', () => {
 
   it('wires the expected rich-content extensions', () => {
     const names = buildExtensions().map((e) => e.name)
-    for (const name of ['starterKit', 'underline', 'link', 'highlight', 'image', 'tableKit']) {
+    for (const name of [
+      'starterKit',
+      'underline',
+      'link',
+      'highlight',
+      'image',
+      'tableKit',
+      'codeBlock'
+    ]) {
       expect(names, `missing extension: ${name}`).toContain(name)
     }
   })

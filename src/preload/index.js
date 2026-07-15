@@ -38,6 +38,7 @@ const api = {
     search: (q) => ipcRenderer.invoke('notes:search', q),
     open: (id) => ipcRenderer.invoke('note:open', id),
     export: (id, format) => ipcRenderer.invoke('note:export', id, format),
+    copyMarkdown: (id) => ipcRenderer.invoke('note:copy-markdown', id),
     addTag: (noteId, tagId) => ipcRenderer.invoke('note:add-tag', noteId, tagId),
     removeTag: (noteId, tagId) => ipcRenderer.invoke('note:remove-tag', noteId, tagId),
     lockAll: (locked) => ipcRenderer.invoke('notes:lock-all', locked),
@@ -47,7 +48,8 @@ const api = {
   },
   tags: {
     list: () => ipcRenderer.invoke('tags:list'),
-    create: (name, color) => ipcRenderer.invoke('tag:create', name, color)
+    create: (name, color) => ipcRenderer.invoke('tag:create', name, color),
+    remove: (id) => ipcRenderer.invoke('tag:delete', id)
   },
   profiles: {
     list: () => ipcRenderer.invoke('profiles:list'),

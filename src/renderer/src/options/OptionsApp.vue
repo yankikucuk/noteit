@@ -10,6 +10,8 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } 
 import OptionsMenu from '../note/OptionsMenu.vue'
 import ToastHost from '../ui/ToastHost.vue'
 import { getColor } from '../shared/colors'
+import { pushToast } from '../shared/toast.js'
+import { t } from '../i18n.js'
 
 const noteId = Number(new URLSearchParams(window.location.search).get('id'))
 const note = reactive({
@@ -86,6 +88,10 @@ function onAction(action) {
   } else if (action === 'trash') {
     window.api.notes.trash(noteId)
     window.api.options.close()
+  } else if (action === 'copy-md') {
+    window.api.notes.copyMarkdown(noteId).then((r) => {
+      if (r?.ok) pushToast(t('toast.copied'), 'success')
+    })
   } else if (action.startsWith('export:')) {
     window.api.notes.export(noteId, action.split(':')[1])
   }
@@ -108,6 +114,9 @@ function onAction(action) {
 
 <style scoped>
 .wrap {
+  /* Theme-adaptive hover tints (visible on dark notes too). */
+  --hover: color-mix(in srgb, var(--text) 12%, transparent);
+  --hover-strong: color-mix(in srgb, var(--text) 22%, transparent);
   display: inline-block;
   padding: 10px;
 }

@@ -125,8 +125,8 @@ async function emitChanged() {
 <style scoped>
 .tag-picker {
   width: 210px;
-  background: var(--x-surface, #fff);
-  color: var(--x-text, #222);
+  background: var(--bar, #fff);
+  color: var(--text, #222);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
@@ -137,10 +137,13 @@ async function emitChanged() {
   align-items: center;
   gap: 7px;
   padding: 9px 11px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--hover, rgba(0, 0, 0, 0.08));
+}
+.search:focus-within {
+  background: var(--hover, rgba(0, 0, 0, 0.04));
 }
 .search i {
-  color: var(--x-text-faint, #aaa);
+  color: color-mix(in srgb, currentColor 55%, transparent);
   font-size: 11px;
 }
 .search input {
@@ -171,7 +174,7 @@ async function emitChanged() {
   text-align: left;
 }
 .row:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--hover, rgba(0, 0, 0, 0.06));
 }
 .dot {
   width: 9px;
@@ -187,24 +190,24 @@ async function emitChanged() {
 }
 .cnt {
   font-size: 10.5px;
-  color: var(--x-text-faint, #aaa);
+  color: color-mix(in srgb, currentColor 55%, transparent);
 }
 .chk {
   font-size: 10px;
-  color: var(--x-accent, #3d7eff);
+  color: var(--accent, #3d7eff);
 }
 .row.on .name {
   font-weight: 600;
 }
 .row.create {
-  color: var(--x-accent, #3d7eff);
+  color: var(--accent, #3d7eff);
 }
 .row.create i {
   font-size: 10px;
 }
 .empty {
   text-align: center;
-  color: var(--x-text-faint, #aaa);
+  color: color-mix(in srgb, currentColor 55%, transparent);
   padding: 14px;
   font-size: 12px;
 }
