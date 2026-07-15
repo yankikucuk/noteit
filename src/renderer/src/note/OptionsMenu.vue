@@ -7,7 +7,8 @@
  * @prop {object} note - The note being edited.
  * @prop {boolean} [hasAlarm] - Whether the note has an active reminder.
  * @emits update - Partial field changes to persist.
- * @emits action - Named action (alarm, history, duplicate, explorer, copy-md, export:*, trash).
+ * @emits action - Named action (alarm, history, duplicate, explorer, copy-md, png,
+ *   print, export:*, trash).
  * @emits close - Request to close the menu.
  */
 import { computed } from 'vue'
@@ -122,6 +123,14 @@ function setToggle(field, val) {
       <i class="fa-solid fa-copy icn"></i>
       <span>{{ t('options.copyMarkdown') }}</span>
     </button>
+    <button class="item" @click="emit('action', 'png')">
+      <i class="fa-solid fa-image icn"></i>
+      <span>{{ t('options.exportImage') }}</span>
+    </button>
+    <button class="item" @click="emit('action', 'print')">
+      <i class="fa-solid fa-print icn"></i>
+      <span>{{ t('options.print') }}</span>
+    </button>
 
     <div class="export-row">
       <i class="fa-solid fa-file-export icn"></i>
@@ -129,6 +138,7 @@ function setToggle(field, val) {
       <span class="chips">
         <button @click="emit('action', 'export:txt')">TXT</button>
         <button @click="emit('action', 'export:md')">MD</button>
+        <button @click="emit('action', 'export:pdf')">PDF</button>
         <button @click="emit('action', 'export:rtf')">RTF</button>
         <button @click="emit('action', 'export:html')">HTML</button>
       </span>

@@ -39,6 +39,9 @@ const api = {
     open: (id) => ipcRenderer.invoke('note:open', id),
     export: (id, format) => ipcRenderer.invoke('note:export', id, format),
     copyMarkdown: (id) => ipcRenderer.invoke('note:copy-markdown', id),
+    exportPng: (id) => ipcRenderer.invoke('note:export-png', id),
+    exportPdf: (id) => ipcRenderer.invoke('note:export-pdf', id),
+    print: (id) => ipcRenderer.invoke('note:print', id),
     addTag: (noteId, tagId) => ipcRenderer.invoke('note:add-tag', noteId, tagId),
     removeTag: (noteId, tagId) => ipcRenderer.invoke('note:remove-tag', noteId, tagId),
     lockAll: (locked) => ipcRenderer.invoke('notes:lock-all', locked),
@@ -81,7 +84,8 @@ const api = {
   },
   data: {
     export: () => ipcRenderer.invoke('data:export'),
-    import: () => ipcRenderer.invoke('data:import')
+    import: () => ipcRenderer.invoke('data:import'),
+    importMarkdown: () => ipcRenderer.invoke('data:import-markdown')
   },
   settings: {
     get: (key, fallback) => ipcRenderer.invoke('settings:get', key, fallback),

@@ -68,6 +68,10 @@ async function importData() {
   const r = await window.api.data.import()
   if (r.ok) pushToast(t('toast.imported', { count: r.count }), 'success')
 }
+async function importMarkdown() {
+  const r = await window.api.data.importMarkdown()
+  if (r.ok) pushToast(t('toast.imported', { count: r.count }), 'success')
+}
 function revealData() {
   window.api.appInfo.revealData()
 }
@@ -151,6 +155,9 @@ function close() {
           </button>
           <button class="btn" @click="importData">
             <i class="fa-solid fa-file-import"></i> {{ t('settings.importData') }}
+          </button>
+          <button class="btn ghost" @click="importMarkdown">
+            <i class="fa-brands fa-markdown"></i> {{ t('settings.importMarkdown') }}
           </button>
         </div>
       </section>

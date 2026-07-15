@@ -36,6 +36,8 @@ import { refreshTrayMenu } from './tray.js'
 import { buildApplicationMenu } from './menu.js'
 import { checkForUpdatesManually } from './updater.js'
 import { htmlToPlainText, plainTextToRtf, htmlToMarkdown } from '../shared/exportFormat.js'
+import { printNote, noteToPdf } from './printing.js'
+import { marked } from 'marked'
 
 /**
  * Applies a language change everywhere: main-process locale, tray and app
@@ -441,6 +443,42 @@ export function registerIpc() {
     return { ok: true }
   })
 
+  // Captures the open note window as a PNG image.
+  handle('note:export-png', async (_e, id) => {
+    const win = getNoteWindow(id)
+    if (!win) return { ok: false }
+    const image = await win.webContents.capturePage()
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: t('dialog.exportTitle'),
+      defaultPath: join(app.getPath('documents'), `note-${id}.png`),
+      filters: [{ name: 'PNG', extensions: ['png'] }]
+    })
+    if (canceled || !filePath) return { ok: false }
+    writeFileSync(filePath, image.toPNG())
+    return { ok: true, path: filePath }
+  })
+
+  // Renders the note content to a PDF file.
+  handle('note:export-pdf', async (_e, id) => {
+    const note = repo.getNote(id)
+    if (!note) return { ok: false }
+    const { canceled, filePath } = await dialog.showSaveDialog({
+      title: t('dialog.exportTitle'),
+      defaultPath: join(app.getPath('documents'), `note-${id}.pdf`),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    })
+    if (canceled || !filePath) return { ok: false }
+    writeFileSync(filePath, await noteToPdf(note))
+    return { ok: true, path: filePath }
+  })
+
+  // Prints the note content via the system print dialog.
+  handle('note:print', async (_e, id) => {
+    const note = repo.getNote(id)
+    if (!note) return { ok: false }
+    return { ok: await printNote(note) }
+  })
+
   // --- Bulk data import / export (JSON) -------------------------------------
   handle('data:export', async () => {
     const stamp = new Date().toISOString().slice(0, 10)
@@ -479,6 +517,28 @@ export function registerIpc() {
       return { ok: false, error: 'invalid' }
     }
     const { imported } = repo.importNotesData(data)
+    refreshExplorer()
+    return { ok: true, count: imported }
+  })
+
+  // Imports Markdown/text files (one note per file) into the active profile.
+  handle('data:import-markdown', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: t('dialog.importMarkdownTitle'),
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: t('dialog.markdownFilter'), extensions: ['md', 'markdown', 'txt'] }]
+    })
+    if (canceled || !filePaths?.length) return { ok: false }
+    let imported = 0
+    for (const fp of filePaths) {
+      try {
+        const html = marked.parse(readFileSync(fp, 'utf8'), { async: false })
+        repo.createNote({ content: html, plain_text: htmlToPlainText(html), hidden: 1 })
+        imported++
+      } catch (err) {
+        log.error('Markdown import failed for', fp, err)
+      }
+    }
     refreshExplorer()
     return { ok: true, count: imported }
   })

@@ -54,6 +54,7 @@
     "electron-log": "^5.4.4",
     "electron-updater": "^6.8.9",
     "lowlight": "^3.3.0",
+    "marked": "^14.1.4",
     "vue": "^3.5.39"
   },
   "devDependencies": {

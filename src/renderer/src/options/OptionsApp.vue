@@ -92,6 +92,12 @@ function onAction(action) {
     window.api.notes.copyMarkdown(noteId).then((r) => {
       if (r?.ok) pushToast(t('toast.copied'), 'success')
     })
+  } else if (action === 'png') {
+    window.api.notes.exportPng(noteId)
+  } else if (action === 'print') {
+    window.api.notes.print(noteId)
+  } else if (action === 'export:pdf') {
+    window.api.notes.exportPdf(noteId)
   } else if (action.startsWith('export:')) {
     window.api.notes.export(noteId, action.split(':')[1])
   }
