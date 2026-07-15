@@ -45,6 +45,7 @@ const api = {
     open: (id) => ipcRenderer.invoke('note:open', id),
     export: (id, format) => ipcRenderer.invoke('note:export', id, format),
     copyMarkdown: (id) => ipcRenderer.invoke('note:copy-markdown', id),
+    copyLink: (id) => ipcRenderer.invoke('note:copy-link', id),
     exportPng: (id) => ipcRenderer.invoke('note:export-png', id),
     exportPdf: (id) => ipcRenderer.invoke('note:export-pdf', id),
     print: (id) => ipcRenderer.invoke('note:print', id),

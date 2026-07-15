@@ -38,6 +38,7 @@ import { checkForUpdatesManually } from './updater.js'
 import { htmlToPlainText, plainTextToRtf, htmlToMarkdown } from '../shared/exportFormat.js'
 import { printNote, noteToPdf } from './printing.js'
 import { applyGlobalShortcuts } from './shortcuts.js'
+import { noteLink } from './protocol.js'
 import { marked } from 'marked'
 
 /**
@@ -486,6 +487,13 @@ export function registerIpc() {
     const note = repo.getNote(id)
     if (!note) return { ok: false }
     clipboard.writeText(htmlToMarkdown(note.content))
+    return { ok: true }
+  })
+
+  // Copies a noteit:// deep link to the note.
+  handle('note:copy-link', (_e, id) => {
+    if (!repo.getNote(id)) return { ok: false }
+    clipboard.writeText(noteLink(id))
     return { ok: true }
   })
 

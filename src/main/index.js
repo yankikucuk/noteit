@@ -21,6 +21,7 @@ import { startAlarmScheduler, stopAlarmScheduler } from './alarms.js'
 import { buildApplicationMenu } from './menu.js'
 import { initAutoUpdater } from './updater.js'
 import { applyGlobalShortcuts } from './shortcuts.js'
+import { registerProtocolClient, deepLinkFromArgv, handleDeepLink } from './protocol.js'
 import { initLocale, setLocale, t } from './i18n.js'
 import {
   getSetting,
@@ -44,7 +45,23 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  app.on('second-instance', () => newNote())
+  registerProtocolClient()
+
+  // A noteit:// URL clicked while the app is closed arrives on macOS via
+  // `open-url` (possibly before the app is ready — buffer it until then).
+  let pendingDeepLink = null
+  app.on('open-url', (event, url) => {
+    event.preventDefault()
+    if (app.isReady()) handleDeepLink(url)
+    else pendingDeepLink = url
+  })
+
+  // A second launch (Windows/Linux) carries any deep link in its argv.
+  app.on('second-instance', (_event, argv) => {
+    const link = deepLinkFromArgv(argv)
+    if (link) handleDeepLink(link)
+    else newNote()
+  })
 
   app.whenReady().then(() => {
     electronApp.setAppUserModelId('com.noteit.app')
@@ -70,6 +87,11 @@ if (!gotLock) {
     applyGlobalShortcuts()
 
     if (!is.dev) initAutoUpdater()
+
+    // Handle a deep link that launched the app (macOS buffered it; Windows/Linux
+    // pass it in the initial argv).
+    const launchLink = pendingDeepLink || deepLinkFromArgv(process.argv)
+    if (launchLink) handleDeepLink(launchLink)
   })
 
   // Keep living in the tray even when every note window is closed.

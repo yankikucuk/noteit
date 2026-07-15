@@ -139,6 +139,10 @@ function setToggle(field, val) {
       <i class="fa-solid fa-copy icn"></i>
       <span>{{ t('options.copyMarkdown') }}</span>
     </button>
+    <button class="item" @click="emit('action', 'copy-link')">
+      <i class="fa-solid fa-link icn"></i>
+      <span>{{ t('options.copyLink') }}</span>
+    </button>
     <button class="item" @click="emit('action', 'png')">
       <i class="fa-solid fa-image icn"></i>
       <span>{{ t('options.exportImage') }}</span>

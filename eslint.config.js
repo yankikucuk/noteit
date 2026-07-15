@@ -33,6 +33,13 @@ export default [
     languageOptions: { globals: { ...globals.browser } }
   },
   {
+    // Shared, dependency-free modules run in both the main (Node) and renderer
+    // (browser) processes, so they may use web-standard globals present in both
+    // (e.g. URL, Date, Set).
+    files: ['src/shared/**'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } }
+  },
+  {
     files: ['**/*.test.js'],
     languageOptions: { globals: { ...globals.node } }
   }

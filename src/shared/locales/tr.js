@@ -85,6 +85,7 @@ export default {
   'options.duplicate': 'Çoğalt',
   'options.explorer': 'Not Gezgini',
   'options.copyMarkdown': 'Markdown olarak kopyala',
+  'options.copyLink': 'Bağlantıyı kopyala',
   'options.exportImage': 'Görsel olarak dışa aktar',
   'options.print': 'Yazdır',
   'options.export': 'Dışa aktar',
@@ -292,6 +293,7 @@ export default {
   // Toast notifications
   'toast.backupCreated': 'Yedek oluşturuldu',
   'toast.copied': 'Panoya kopyalandı',
+  'toast.linkCopied': 'Bağlantı kopyalandı',
   'toast.exported': '{count} not dışa aktarıldı',
   'toast.imported': '{count} not içe aktarıldı',
   'toast.versionRestored': 'Not önceki bir sürüme geri yüklendi',

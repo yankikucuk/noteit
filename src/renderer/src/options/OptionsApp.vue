@@ -92,6 +92,10 @@ function onAction(action) {
     window.api.notes.copyMarkdown(noteId).then((r) => {
       if (r?.ok) pushToast(t('toast.copied'), 'success')
     })
+  } else if (action === 'copy-link') {
+    window.api.notes.copyLink(noteId).then((r) => {
+      if (r?.ok) pushToast(t('toast.linkCopied'), 'success')
+    })
   } else if (action === 'png') {
     window.api.notes.exportPng(noteId)
   } else if (action === 'print') {

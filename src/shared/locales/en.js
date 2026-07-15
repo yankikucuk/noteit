@@ -85,6 +85,7 @@ export default {
   'options.duplicate': 'Duplicate',
   'options.explorer': 'Note Explorer',
   'options.copyMarkdown': 'Copy as Markdown',
+  'options.copyLink': 'Copy link',
   'options.exportImage': 'Export as image',
   'options.print': 'Print',
   'options.export': 'Export',
@@ -289,6 +290,7 @@ export default {
   // Toast notifications
   'toast.backupCreated': 'Backup created',
   'toast.copied': 'Copied to clipboard',
+  'toast.linkCopied': 'Link copied',
   'toast.exported': '{count} notes exported',
   'toast.imported': '{count} notes imported',
   'toast.versionRestored': 'Note restored to an earlier version',
