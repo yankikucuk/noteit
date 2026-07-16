@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- Windows auto-update failed with a checksum mismatch: an explicit `arch` list
+  in `electron-builder.yml` overrode the per-runner CLI flags, so both Windows
+  CI runners built both architectures (plus a dual-arch installer) and the
+  published `latest.yml` carried checksums of files that were never uploaded.
+  Each runner now builds exactly one architecture, and the release merge
+  aborts on conflicting same-named artifacts or metadata instead of silently
+  publishing a broken feed. The v1.0.2 release's `latest.yml` was repaired in
+  place so existing installs can update.
+
 ## [1.0.2] - 2026-07-16
 
 ### Security

@@ -72,12 +72,15 @@ dmg:
       path: /Applications
 
 win:
-  target:
-    - target: nsis
-      arch: [x64, arm64]
-  # x64 and arm64 are built on separate runners (a native arm64 Windows runner
-  # builds the arm64 installer); each build:win* script passes the matching arch
-  # flag, so neither runner cross-compiles the native module.
+  # No arch list here — deliberately. An explicit `arch:` in the config
+  # overrides the CLI flags, which made BOTH Windows CI runners build BOTH
+  # architectures plus a dual-arch universal installer: identically named,
+  # byte-different artifacts that corrupted the auto-update metadata (the
+  # published latest.yml carried checksums of files that were never uploaded).
+  # The arch is passed per runner instead: build:win uses --x64 on
+  # windows-latest and build:win-arm uses --arm64 on windows-11-arm, so each
+  # runner builds exactly one native installer.
+  target: nsis
   # --- Code signing (Windows) ---
   # Provide a certificate via CSC_LINK (path/base64 of .pfx) + CSC_KEY_PASSWORD to
   # avoid SmartScreen warnings. Unsigned otherwise.
