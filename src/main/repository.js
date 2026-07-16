@@ -11,6 +11,7 @@ import { getDb } from './database.js'
 import { t } from './i18n.js'
 import { toFtsQuery } from '../shared/search.js'
 import { sanitizeHtml } from '../shared/sanitizeHtml.js'
+import { parseRepeat } from '../shared/recurrence.js'
 
 /** Active profile id; all scoped queries filter by this. */
 let currentProfileId = 1
@@ -395,9 +396,17 @@ export function trashNote(id) {
   return getNote(id)
 }
 
-/** Restores a note from the trash. @param {number} id @returns {object} */
+/**
+ * Restores a note from the trash back to the active list. Also clears the
+ * archived flag: "restore" means the note becomes fully active again, not
+ * that it silently lands back in the archive.
+ * @param {number} id - Note id.
+ * @returns {object} The restored note.
+ */
 export function restoreNote(id) {
-  getDb().prepare('UPDATE notes SET deleted_at = NULL, hidden = 0 WHERE id = ?').run(id)
+  getDb()
+    .prepare('UPDATE notes SET deleted_at = NULL, archived_at = NULL, hidden = 0 WHERE id = ?')
+    .run(id)
   return getNote(id)
 }
 
@@ -609,24 +618,39 @@ export function getAlarmForNote(noteId) {
 }
 
 /**
- * Creates or updates the alarm for a note.
+ * Normalises a repeat mode coming over IPC: presets and parsable custom rules
+ * (`everyDays:N`, `weekdays:…`) pass through; anything else becomes 'once'.
+ * @param {*} mode - Candidate repeat mode.
+ * @returns {string} A valid repeat mode.
+ */
+function normalizeRepeatMode(mode) {
+  if (typeof mode !== 'string') return 'once'
+  return mode === 'once' || parseRepeat(mode).kind !== 'once' ? mode : 'once'
+}
+
+/**
+ * Creates or updates the alarm for a note. Input is validated: a non-finite or
+ * non-positive trigger time is rejected, and an unknown repeat mode falls back
+ * to 'once'.
  * @param {number} noteId - Note id.
  * @param {number} triggerAt - Trigger time (epoch ms).
- * @param {'once'|'daily'|'weekly'|'monthly'|'yearly'} [repeatMode] - Repeat mode.
- * @returns {object} The alarm row.
+ * @param {string} [repeatMode] - A preset or custom rule (see recurrence.js).
+ * @returns {object|null} The alarm row, or null for invalid input.
  */
 export function setAlarm(noteId, triggerAt, repeatMode = 'once') {
+  if (!Number.isFinite(triggerAt) || triggerAt <= 0) return null
+  const mode = normalizeRepeatMode(repeatMode)
   const db = getDb()
   const existing = getAlarmForNote(noteId)
   if (existing) {
     db.prepare(
       'UPDATE alarms SET trigger_at = ?, repeat_mode = ?, enabled = 1, last_fired_at = NULL WHERE id = ?'
-    ).run(triggerAt, repeatMode, existing.id)
+    ).run(triggerAt, mode, existing.id)
     return db.prepare('SELECT * FROM alarms WHERE id = ?').get(existing.id)
   }
   const info = db
     .prepare('INSERT INTO alarms (note_id, trigger_at, repeat_mode, enabled) VALUES (?, ?, ?, 1)')
-    .run(noteId, triggerAt, repeatMode)
+    .run(noteId, triggerAt, mode)
   return db.prepare('SELECT * FROM alarms WHERE id = ?').get(info.lastInsertRowid)
 }
 
@@ -643,6 +667,7 @@ export function clearAlarm(noteId) {
  * @returns {object|null} The updated alarm row, or null if the note has none.
  */
 export function snoozeAlarm(noteId, triggerAt) {
+  if (!Number.isFinite(triggerAt) || triggerAt <= 0) return null
   const db = getDb()
   const existing = getAlarmForNote(noteId)
   if (!existing) return null
@@ -664,6 +689,29 @@ export function getDueAlarms(now = Date.now()) {
       `SELECT a.* FROM alarms a JOIN notes n ON n.id = a.note_id
         WHERE a.enabled = 1 AND a.trigger_at <= ?
           AND n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL`
+    )
+    .all(now, currentProfileId)
+}
+
+/**
+ * Returns due, enabled alarms of notes in *other* profiles, joined with their
+ * profile so the caller can decide how to surface them. Reminders should not
+ * silently vanish just because another profile is active — these are shown as
+ * system notifications (content is withheld for password-protected profiles).
+ * @param {number} [now] - Reference time (epoch ms).
+ * @returns {object[]} Alarm rows extended with `plain_text`, `profile_id`,
+ *   `profile_name` and `has_password`.
+ */
+export function getDueAlarmsOtherProfiles(now = Date.now()) {
+  return getDb()
+    .prepare(
+      `SELECT a.*, n.plain_text, p.id AS profile_id, p.name AS profile_name,
+              (p.password_hash IS NOT NULL) AS has_password
+         FROM alarms a
+         JOIN notes n ON n.id = a.note_id
+         JOIN profiles p ON p.id = n.profile_id
+        WHERE a.enabled = 1 AND a.trigger_at <= ?
+          AND n.profile_id != ? AND n.deleted_at IS NULL AND n.archived_at IS NULL`
     )
     .all(now, currentProfileId)
 }
@@ -786,7 +834,9 @@ function resolveOrCreateNotebook(name) {
 
 /**
  * Serialises the active profile's live (non-trashed) notes into a portable,
- * version-tagged JSON structure, with category names and tags inlined.
+ * version-tagged JSON structure, with category names, tags, archive state and
+ * reminders inlined. Version 2 adds `archived_at` and `alarm`; version-1 files
+ * (which simply lack those fields) still import cleanly.
  * @returns {{format: string, version: number, exportedAt: string, notes: object[]}}
  */
 export function exportProfileData() {
@@ -799,9 +849,26 @@ export function exportProfileData() {
       .all(currentProfileId)
   )
   const nameById = new Map(listNotebooks().map((nb) => [nb.id, nb.name]))
+
+  // Alarms for all exported notes in one batched query (no per-note lookup).
+  const alarmByNote = new Map()
+  if (notes.length) {
+    const placeholders = notes.map(() => '?').join(',')
+    const rows = db
+      .prepare(`SELECT * FROM alarms WHERE note_id IN (${placeholders})`)
+      .all(...notes.map((n) => n.id))
+    for (const a of rows) {
+      alarmByNote.set(a.note_id, {
+        trigger_at: a.trigger_at,
+        repeat_mode: a.repeat_mode,
+        enabled: a.enabled
+      })
+    }
+  }
+
   return {
     format: 'noteit-export',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     notes: (notes || []).map((n) => ({
       content: n.content,
@@ -812,8 +879,10 @@ export function exportProfileData() {
       always_on_top: n.always_on_top,
       starred: n.starred,
       collapsed: n.collapsed,
+      archived_at: n.archived_at ?? null,
       category: nameById.get(n.notebook_id) || null,
       tags: (n.tags || []).map((tag) => ({ name: tag.name, color: tag.color })),
+      alarm: alarmByNote.get(n.id) || null,
       created_at: n.created_at,
       updated_at: n.updated_at
     }))
@@ -853,6 +922,16 @@ export function importNotesData(data) {
           if (!tg || !tg.name) continue
           const tag = createTag(String(tg.name), typeof tg.color === 'string' ? tg.color : 'slate')
           if (tag) addTagToNote(note.id, tag.id)
+        }
+      }
+      // Version-2 fields: archive state and reminder (absent in v1 files).
+      if (Number.isFinite(raw.archived_at)) {
+        db.prepare('UPDATE notes SET archived_at = ? WHERE id = ?').run(raw.archived_at, note.id)
+      }
+      if (raw.alarm && typeof raw.alarm === 'object') {
+        const alarm = setAlarm(note.id, raw.alarm.trigger_at, raw.alarm.repeat_mode)
+        if (alarm && !raw.alarm.enabled) {
+          db.prepare('UPDATE alarms SET enabled = 0 WHERE id = ?').run(alarm.id)
         }
       }
       count++

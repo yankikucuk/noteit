@@ -117,6 +117,17 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
     expect(repo.getNote(note.id)).toBeUndefined()
   })
 
+  it('restore returns an archived+trashed note fully to the active list', () => {
+    const note = repo.createNote({ plain_text: 'both' })
+    repo.archiveNote(note.id)
+    repo.trashNote(note.id)
+    repo.restoreNote(note.id)
+    const restored = repo.getNote(note.id)
+    expect(restored.deleted_at).toBeNull()
+    expect(restored.archived_at).toBeNull()
+    expect(restored.hidden).toBe(0)
+  })
+
   it('attaches tags to notes and counts usage', () => {
     const note = repo.createNote({})
     const tag = repo.createTag('Work', 'blue')
@@ -226,6 +237,32 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
     it('ignores a payload without a notes array', () => {
       expect(repo.importNotesData({}).imported).toBe(0)
       expect(repo.importNotesData(null).imported).toBe(0)
+    })
+
+    it('round-trips archive state and reminders (export v2)', () => {
+      const archived = repo.createNote({ plain_text: 'archived note' })
+      repo.archiveNote(archived.id)
+      const withAlarm = repo.createNote({ plain_text: 'alarmed note' })
+      const at = Date.now() + 1e6
+      repo.setAlarm(withAlarm.id, at, 'weekly')
+
+      const payload = repo.exportProfileData()
+      expect(payload.version).toBe(2)
+      const exportedArchived = payload.notes.find((n) => n.plain_text === 'archived note')
+      const exportedAlarmed = payload.notes.find((n) => n.plain_text === 'alarmed note')
+      expect(exportedArchived.archived_at).toBeGreaterThan(0)
+      expect(exportedAlarmed.alarm).toMatchObject({ trigger_at: at, repeat_mode: 'weekly' })
+
+      const p2 = repo.createProfile('Second')
+      repo.setCurrentProfile(p2.id)
+      repo.importNotesData(payload)
+      expect(repo.getArchivedNotes().map((n) => n.plain_text)).toContain('archived note')
+      const imported = repo.getActiveNotes().find((n) => n.plain_text === 'alarmed note')
+      expect(repo.getAlarmForNote(imported.id)).toMatchObject({
+        trigger_at: at,
+        repeat_mode: 'weekly',
+        enabled: 1
+      })
     })
 
     it('sanitises imported note HTML (script, handlers, javascript: URLs)', () => {
@@ -384,6 +421,40 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
     it('returns null when snoozing a note without an alarm', () => {
       const note = repo.createNote({})
       expect(repo.snoozeAlarm(note.id, Date.now() + 1000)).toBeNull()
+    })
+
+    it('rejects invalid trigger times and normalises unknown repeat modes', () => {
+      const note = repo.createNote({})
+      expect(repo.setAlarm(note.id, NaN, 'daily')).toBeNull()
+      expect(repo.setAlarm(note.id, -5, 'daily')).toBeNull()
+      expect(repo.snoozeAlarm(note.id, 'soon')).toBeNull()
+
+      const alarm = repo.setAlarm(note.id, Date.now() + 1000, 'total-nonsense')
+      expect(alarm.repeat_mode).toBe('once')
+      const custom = repo.setAlarm(note.id, Date.now() + 1000, 'everyDays:3')
+      expect(custom.repeat_mode).toBe('everyDays:3')
+    })
+
+    it('surfaces due reminders of other profiles with their profile info', () => {
+      const open = repo.createProfile('OpenP')
+      const locked = repo.createProfile('LockedP')
+      repo.setProfilePasswordHash(locked.id, 'salt:hash')
+
+      repo.setCurrentProfile(open.id)
+      const a = repo.createNote({ plain_text: 'open reminder' })
+      repo.setAlarm(a.id, 1000, 'once')
+      repo.setCurrentProfile(locked.id)
+      const b = repo.createNote({ plain_text: 'secret reminder' })
+      repo.setAlarm(b.id, 1000, 'once')
+
+      repo.setCurrentProfile(1)
+      const due = repo.getDueAlarmsOtherProfiles(Date.now())
+      const openRow = due.find((r) => r.profile_name === 'OpenP')
+      const lockedRow = due.find((r) => r.profile_name === 'LockedP')
+      expect(openRow).toMatchObject({ has_password: 0, plain_text: 'open reminder' })
+      expect(lockedRow).toMatchObject({ has_password: 1 })
+      // The active profile's own due alarms are not in this list.
+      expect(due.every((r) => r.profile_id !== 1)).toBe(true)
     })
 
     it('lists upcoming reminders soonest first, excluding trashed and archived', () => {

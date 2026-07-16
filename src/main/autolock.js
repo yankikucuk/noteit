@@ -10,7 +10,7 @@
 
 import { powerMonitor } from 'electron'
 import { getSetting, getProfile, getCurrentProfileId, listProfiles } from './repository.js'
-import { switchToProfile } from './ipc.js'
+import { switchToProfile } from './profiles.js'
 import log from './logger.js'
 
 /** @type {NodeJS.Timeout|null} */

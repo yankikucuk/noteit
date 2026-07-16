@@ -318,6 +318,7 @@ export default {
   // Notifications
   'notify.reminderTitle': 'NoteIt Hatırlatıcı',
   'notify.reminderBody': 'Not hatırlatıcısı',
+  'notify.reminderLocked': 'Kilitli “{name}” profilinde bir hatırlatıcı',
 
   // Note colors
   'color.yellow': 'Sarı',

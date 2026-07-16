@@ -162,7 +162,10 @@ const auxBoundsTimers = new Map()
 /**
  * Restores an auxiliary window's saved size/position (clamped on-screen) and
  * persists future moves/resizes under the given settings key, so the Explorer
- * and Settings windows reopen where the user left them.
+ * and Settings windows reopen where the user left them. Listens to `move`
+ * (fires on every platform, unlike the macOS/Windows-only `moved`) with a
+ * debounced write, and flushes immediately on close so a move-then-close never
+ * loses the position.
  *
  * @param {BrowserWindow} win - The window to track.
  * @param {string} key - Settings key to store the bounds under.
@@ -182,8 +185,13 @@ function trackWindowBounds(win, key) {
       setTimeout(() => setSetting(key, bounds), 400)
     )
   }
-  win.on('moved', save)
+  win.on('move', save)
   win.on('resize', save)
+  win.on('close', () => {
+    clearTimeout(auxBoundsTimers.get(key))
+    auxBoundsTimers.delete(key)
+    if (!win.isDestroyed()) setSetting(key, win.getBounds())
+  })
 }
 
 /** Debounce timers for bounds persistence, keyed by note id. @type {Map<number, NodeJS.Timeout>} */
@@ -294,12 +302,25 @@ function createNoteWindow(note) {
     ensureOnScreen(win)
     win.show()
   })
+  // `moved` (fires once, after the drag) is macOS/Windows-only. `move` fires on
+  // every platform — including Linux — during the drag, so a short quiet period
+  // after the last `move` acts as the cross-platform "drag ended" signal. On
+  // macOS/Windows both paths run; the second snap is an aligned no-op.
+  let moveEndTimer = null
+  win.on('move', () => {
+    persistBounds(note.id, win) // already debounced internally
+    clearTimeout(moveEndTimer)
+    moveEndTimer = setTimeout(() => snapWindow(note.id, win), 250)
+  })
   win.on('moved', () => {
     snapWindow(note.id, win)
     persistBounds(note.id, win)
   })
   win.on('resize', () => persistBounds(note.id, win))
-  win.on('closed', () => noteWindows.delete(note.id))
+  win.on('closed', () => {
+    clearTimeout(moveEndTimer)
+    noteWindows.delete(note.id)
+  })
   bindFocusFade(note.id, win)
 
   noteWindows.set(note.id, win)
@@ -307,11 +328,15 @@ function createNoteWindow(note) {
 }
 
 /**
- * Opens a note window, focusing it if already open. Un-hides the note if it was
- * hidden or trashed.
+ * Opens a note window, focusing it if already open. Trashed notes are refused —
+ * they must be restored first, so the trash can never leak editable windows.
+ * Opening un-hides an active note; an archived note opens as a "peek" without
+ * changing its archived/hidden state, so it does not reappear on the desktop
+ * after a restart.
  *
  * @param {number} noteId - Note id.
- * @returns {BrowserWindow|null} The window, or `null` if the note does not exist.
+ * @returns {BrowserWindow|null} The window, or `null` if the note does not
+ *   exist or is in the trash.
  */
 export function openNote(noteId) {
   const existing = noteWindows.get(noteId)
@@ -321,8 +346,8 @@ export function openNote(noteId) {
     return existing
   }
   const note = getNote(noteId)
-  if (!note) return null
-  if (note.hidden || note.deleted_at) updateNote(noteId, { hidden: 0 })
+  if (!note || note.deleted_at) return null
+  if (note.hidden && !note.archived_at) updateNote(noteId, { hidden: 0 })
   return createNoteWindow(getNote(noteId))
 }
 
@@ -401,6 +426,8 @@ export function closeAllNoteWindows() {
     if (w && !w.isDestroyed()) w.destroy()
   }
   noteWindows.clear()
+  // Cancel pending debounced writes so no stale bounds land after the switch.
+  for (const timer of persistTimers.values()) clearTimeout(timer)
   persistTimers.clear()
 }
 

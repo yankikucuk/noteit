@@ -22,14 +22,13 @@ import {
   openSettingsWindow,
   getNoteWindow,
   getAllNoteWindowIds,
-  closeAllNoteWindows,
-  restoreVisibleNotes,
   openOptionsWindow,
   closeOptionsWindow,
   resizeOptionsWindow,
   broadcastToAllWindows
 } from './windows.js'
 import { hashPassword, verifyPassword } from './password.js'
+import { switchToProfile } from './profiles.js'
 import log from './logger.js'
 import { t, setLocale, getLocale } from './i18n.js'
 import { refreshTrayMenu } from './tray.js'
@@ -73,20 +72,6 @@ function handle(channel, fn) {
       throw err
     }
   })
-}
-
-/**
- * Switches the active profile: persists the choice, closes the previous
- * profile's note windows and opens the new profile's visible notes.
- *
- * @param {number} id - Profile id to activate.
- */
-export function switchToProfile(id) {
-  repo.setCurrentProfile(id)
-  repo.setSetting('active_profile_id', id)
-  closeAllNoteWindows()
-  restoreVisibleNotes()
-  refreshExplorer()
 }
 
 /** Registers all IPC handlers. Call once, after the database is initialised. */

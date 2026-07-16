@@ -315,6 +315,7 @@ export default {
   // Notifications
   'notify.reminderTitle': 'NoteIt Reminder',
   'notify.reminderBody': 'Note reminder',
+  'notify.reminderLocked': 'A reminder in the locked profile “{name}”',
 
   // Note colors
   'color.yellow': 'Yellow',

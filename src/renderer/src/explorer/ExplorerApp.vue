@@ -351,7 +351,12 @@ function newNote() {
 
 // Selection (multi, for merge)
 function toggleSelect(n, e) {
-  if (!e.ctrlKey && !e.metaKey) return openNote(n)
+  // Trashed notes are never opened directly — restore first (the main process
+  // refuses them too); a plain click in the trash view is a no-op.
+  if (!e.ctrlKey && !e.metaKey) {
+    if (view.value !== 'trash') openNote(n)
+    return
+  }
   const s = new Set(selected.value)
   s.has(n.id) ? s.delete(n.id) : s.add(n.id)
   selected.value = s
