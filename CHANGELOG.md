@@ -3,6 +3,45 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Security
+
+- Changing or removing a profile password now requires the current password.
+- Opening a note by id is restricted to the active profile; the command palette
+  verifies a profile switch succeeded before opening a cross-profile result.
+- Imported Markdown/JSON note HTML is sanitised (script elements, inline event
+  handlers, `javascript:`/`vbscript:`/non-image `data:` URLs).
+
+### Fixed
+
+- Trashed notes can no longer be opened from the trash; restore them first.
+  Restoring returns a note fully to the active list (archive flag included).
+- Linux: note windows now snap and persist their position live (the `moved`
+  event never fires there); Explorer/Settings positions are saved on close.
+- Reminders in non-active profiles fire as system notifications instead of
+  being silently skipped; locked profiles get a content-free notification.
+- JSON export (v2) now round-trips archive state and reminders.
+- Moving or resizing a note no longer marks it as recently updated.
+- Reminder input is validated (finite trigger time, known repeat mode).
+
+### Performance
+
+- The full-text index is no longer rebuilt from scratch on every launch.
+- Typing no longer echoes the full note content back to the editing window,
+  and Explorer refreshes coalesce bursts of updates into one reload.
+- Bulk actions run in a single transaction.
+- The editor serialises the document once per edit instead of three times.
+- The opacity slider previews live and persists only on release.
+- Version snapshots skip oversized (image-heavy) content; text search results
+  are capped; Explorer side lists load in parallel.
+
+### Infrastructure
+
+- Note field updates are type-validated per column (malformed values dropped).
+- Profile switching extracted to its own module shared by IPC, auto-lock and
+  the reminder scheduler.
+
 ## [1.0.1] - 2026-07-16
 
 ### Added

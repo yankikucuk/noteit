@@ -29,6 +29,7 @@ const api = {
     get: (id) => ipcRenderer.invoke('note:get', id),
     create: (overrides) => ipcRenderer.invoke('note:create', overrides),
     update: (id, fields) => ipcRenderer.invoke('note:update', id, fields),
+    previewOpacity: (id, value) => ipcRenderer.invoke('note:preview-opacity', id, value),
     trash: (id) => ipcRenderer.invoke('note:trash', id),
     restore: (id) => ipcRenderer.invoke('note:restore', id),
     deleteForever: (id) => ipcRenderer.invoke('note:delete-forever', id),

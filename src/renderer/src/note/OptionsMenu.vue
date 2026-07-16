@@ -7,6 +7,8 @@
  * @prop {object} note - The note being edited.
  * @prop {boolean} [hasAlarm] - Whether the note has an active reminder.
  * @emits update - Partial field changes to persist.
+ * @emits preview-opacity - Live opacity value while the slider is dragged
+ *   (transient; not persisted).
  * @emits action - Named action (alarm, history, duplicate, explorer, copy-md,
  *   copy-link, pomodoro, png, print, export:*, trash).
  * @emits close - Request to close the menu.
@@ -34,7 +36,15 @@ const stats = computed(() => {
 function setColor(name) {
   emit('update', { color: name })
 }
-function onOpacity(e) {
+/**
+ * Live opacity while dragging: previews only (no database write per tick).
+ * The final value is persisted by {@link commitOpacity} on release.
+ */
+function previewOpacity(e) {
+  emit('preview-opacity', Number(e.target.value))
+}
+/** Persists the opacity once the slider is released. */
+function commitOpacity(e) {
   emit('update', { opacity: Number(e.target.value) })
 }
 function setToggle(field, val) {
@@ -82,7 +92,8 @@ function setToggle(field, val) {
         step="0.05"
         :value="note.opacity"
         class="slider"
-        @input="onOpacity"
+        @input="previewOpacity"
+        @change="commitOpacity"
       />
       <span class="pct">{{ Math.round(note.opacity * 100) }}</span>
     </div>

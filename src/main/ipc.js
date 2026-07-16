@@ -25,7 +25,8 @@ import {
   openOptionsWindow,
   closeOptionsWindow,
   resizeOptionsWindow,
-  broadcastToAllWindows
+  broadcastToAllWindows,
+  previewNoteOpacity
 } from './windows.js'
 import { hashPassword, verifyPassword } from './password.js'
 import { switchToProfile } from './profiles.js'
@@ -149,12 +150,25 @@ export function registerIpc() {
     return note
   })
 
-  handle('note:update', (_e, id, fields) => {
+  handle('note:update', (e, id, fields) => {
     const note = repo.updateNote(id, fields)
     applyNoteWindowState(id, fields)
-    sendToNote(id, 'note:updated', note)
+    // Echo the update to the note window only when it did NOT originate there —
+    // the invoke already returns the fresh note to its caller, and re-sending
+    // full content (potentially megabytes of embedded images) back to the
+    // window that is typing would be pure overhead on every autosave flush.
+    if (getNoteWindow(id)?.webContents.id !== e.sender.id) {
+      sendToNote(id, 'note:updated', note)
+    }
     refreshExplorer()
     return note
+  })
+
+  // Transient opacity while the slider is dragged; nothing is persisted (the
+  // slider's release commits the value through note:update).
+  handle('note:preview-opacity', (_e, id, value) => {
+    previewNoteOpacity(id, value)
+    return true
   })
 
   // Opening is restricted to the active profile so a note in another (possibly
@@ -193,23 +207,17 @@ export function registerIpc() {
     return true
   })
 
-  // Applies one action to many selected notes at once.
+  // Applies one action to many selected notes in a single transaction, then
+  // performs the window side effects outside of it.
   handle('notes:bulk', (_e, ids, action, value) => {
     if (!Array.isArray(ids)) return { count: 0 }
-    for (const id of ids) {
-      if (action === 'trash') repo.trashNote(id)
-      else if (action === 'archive') repo.archiveNote(id)
-      else if (action === 'tag') repo.addTagToNote(id, value)
-      else if (action === 'color') repo.updateNote(id, { color: value })
-      else if (action === 'category') repo.updateNote(id, { notebook_id: value })
-      else if (action === 'star') repo.updateNote(id, { starred: value ? 1 : 0 })
-    }
+    const result = repo.bulkNoteAction(ids, action, value)
     for (const id of ids) {
       if (action === 'trash' || action === 'archive') hideNoteWindow(id)
       else sendToNote(id, 'note:updated', repo.getNote(id))
     }
     refreshExplorer()
-    return { count: ids.length }
+    return result
   })
 
   handle('note:delete-forever', (_e, id) => {

@@ -97,9 +97,8 @@ async function refresh() {
   } else {
     notes.value = await window.api.notes.listActive()
   }
-  await loadNotebooks()
-  await loadTags()
-  await loadAgenda()
+  // Independent side lists load in parallel — they don't depend on the notes.
+  await Promise.all([loadNotebooks(), loadTags(), loadAgenda()])
   selected.value = new Set([...selected.value].filter((id) => notes.value.some((n) => n.id === id)))
 }
 

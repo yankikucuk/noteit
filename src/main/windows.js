@@ -13,7 +13,14 @@
 import { BrowserWindow, screen, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
-import { getNote, getVisibleNotes, updateNote, getSetting, setSetting } from './repository.js'
+import {
+  getNote,
+  getVisibleNotes,
+  updateNote,
+  updateNoteBounds,
+  getSetting,
+  setSetting
+} from './repository.js'
 import { t } from './i18n.js'
 
 /** Map of open note windows, keyed by note id. @type {Map<number, BrowserWindow>} */
@@ -199,7 +206,9 @@ const persistTimers = new Map()
 
 /**
  * Debounced write of a note window's position/size to the database. A collapsed
- * note only persists its position, keeping its expanded size intact.
+ * note only persists its position, keeping its expanded size intact. Bounds go
+ * through {@link updateNoteBounds}, which does not bump `updated_at` — moving a
+ * window is not a content edit and must not reorder "recently updated" lists.
  *
  * @param {number} noteId - Note id.
  * @param {BrowserWindow} win - The note window.
@@ -214,8 +223,8 @@ function persistBounds(noteId, win) {
     setTimeout(() => {
       const note = getNote(noteId)
       if (!note) return
-      if (note.collapsed) updateNote(noteId, { x, y })
-      else updateNote(noteId, { x, y, width, height })
+      if (note.collapsed) updateNoteBounds(noteId, { x, y })
+      else updateNoteBounds(noteId, { x, y, width, height })
     }, 400)
   )
 }
@@ -243,6 +252,28 @@ function activeDisplayPosition(w, h) {
 }
 
 /**
+ * Live per-window opacity, kept in memory so focus fades and slider previews
+ * never need a database read. Seeded on window creation and updated by
+ * {@link applyNoteWindowState} and {@link previewNoteOpacity}.
+ * @type {Map<number, number>}
+ */
+const liveOpacity = new Map()
+
+/**
+ * Applies a transient opacity to a note window without persisting it — used
+ * while the opacity slider is being dragged (the release persists the value).
+ * @param {number} noteId - Note id.
+ * @param {number} value - Opacity in (0, 1].
+ */
+export function previewNoteOpacity(noteId, value) {
+  const w = getNoteWindow(noteId)
+  if (!w || !Number.isFinite(value)) return
+  const v = Math.min(1, Math.max(0.1, value))
+  liveOpacity.set(noteId, v)
+  w.setOpacity(v)
+}
+
+/**
  * Reduces a note window's opacity when it loses focus (and restores it on focus)
  * if the "fade unfocused" preference is on, keeping the reduction relative to the
  * note's own opacity.
@@ -250,7 +281,7 @@ function activeDisplayPosition(w, h) {
  * @param {BrowserWindow} win - The note window.
  */
 function bindFocusFade(noteId, win) {
-  const base = () => getNote(noteId)?.opacity ?? 1
+  const base = () => liveOpacity.get(noteId) ?? getNote(noteId)?.opacity ?? 1
   win.on('blur', () => {
     if (getSetting('fade_unfocused', false) && !win.isDestroyed()) win.setOpacity(base() * 0.7)
   })
@@ -293,6 +324,7 @@ function createNoteWindow(note) {
   })
 
   win.setOpacity(note.opacity ?? 1.0)
+  liveOpacity.set(note.id, note.opacity ?? 1.0)
   if (note.always_on_top) win.setAlwaysOnTop(true, 'floating')
 
   hardenWebContents(win)
@@ -320,6 +352,7 @@ function createNoteWindow(note) {
   win.on('closed', () => {
     clearTimeout(moveEndTimer)
     noteWindows.delete(note.id)
+    liveOpacity.delete(note.id)
   })
   bindFocusFade(note.id, win)
 
@@ -380,7 +413,10 @@ export function hideNoteWindow(noteId) {
 export function applyNoteWindowState(noteId, fields) {
   const w = getNoteWindow(noteId)
   if (!w) return
-  if ('opacity' in fields) w.setOpacity(fields.opacity)
+  if ('opacity' in fields) {
+    w.setOpacity(fields.opacity)
+    liveOpacity.set(noteId, fields.opacity)
+  }
   if ('always_on_top' in fields) w.setAlwaysOnTop(!!fields.always_on_top, 'floating')
   if ('locked' in fields) {
     w.setMovable(!fields.locked)
@@ -415,8 +451,8 @@ export function flushAllBounds() {
     const [width, height] = w.getSize()
     const note = getNote(id)
     if (!note) continue
-    if (note.collapsed) updateNote(id, { x, y })
-    else updateNote(id, { x, y, width, height })
+    if (note.collapsed) updateNoteBounds(id, { x, y })
+    else updateNoteBounds(id, { x, y, width, height })
   }
 }
 
@@ -426,6 +462,7 @@ export function closeAllNoteWindows() {
     if (w && !w.isDestroyed()) w.destroy()
   }
   noteWindows.clear()
+  liveOpacity.clear()
   // Cancel pending debounced writes so no stale bounds land after the switch.
   for (const timer of persistTimers.values()) clearTimeout(timer)
   persistTimers.clear()
@@ -567,11 +604,23 @@ export function openExplorer() {
   return explorerWindow
 }
 
-/** Tells the Explorer window (if open) to reload its data. */
+/** Pending debounced Explorer refresh, or null. @type {NodeJS.Timeout|null} */
+let explorerRefreshTimer = null
+
+/**
+ * Tells the Explorer window (if open) to reload its data. Debounced with a
+ * short trailing delay: a burst of updates (autosave flushes, bulk actions)
+ * coalesces into a single reload instead of one full refetch per event, and
+ * the delay is far below perception.
+ */
 export function refreshExplorer() {
-  if (explorerWindow && !explorerWindow.isDestroyed()) {
-    explorerWindow.webContents.send('explorer:refresh')
-  }
+  if (explorerRefreshTimer) return
+  explorerRefreshTimer = setTimeout(() => {
+    explorerRefreshTimer = null
+    if (explorerWindow && !explorerWindow.isDestroyed()) {
+      explorerWindow.webContents.send('explorer:refresh')
+    }
+  }, 150)
 }
 
 // ---------------------------------------------------------------------------

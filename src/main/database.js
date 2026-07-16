@@ -1,10 +1,13 @@
 /**
- * @file SQLite database: connection, PRAGMA tuning, schema and indexes.
+ * @file SQLite database: connection, PRAGMA tuning, schema, indexes, migrations.
  *
  * Uses better-sqlite3 (synchronous). The database lives in the user's userData
- * directory. Schema and indexes are declared with `IF NOT EXISTS`, so the file
- * is the single source of truth — there is no migration layer. All `profile_id`
- * columns cascade from `profiles`, so deleting a profile removes its data.
+ * directory. The baseline schema and indexes are declared idempotently with
+ * `IF NOT EXISTS`; changes to *existing* tables go through the ordered
+ * {@link MIGRATIONS} list, versioned via `PRAGMA user_version`, so older
+ * installs upgrade cleanly. All `profile_id` columns cascade from `profiles`,
+ * so deleting a profile removes its data. Full-text search (FTS5) is an
+ * optional layer — when the SQLite build lacks it, search falls back to LIKE.
  */
 
 import Database from 'better-sqlite3'
@@ -254,10 +257,17 @@ function createIndexes() {
  * Creates the FTS5 full-text index over `notes.plain_text` and the triggers
  * that keep it in sync. Uses an external-content table (the index stores only
  * tokens; the text stays in `notes`). The content trigger fires only when
- * `plain_text` changes, so frequent position/size updates cost nothing. A
- * `rebuild` indexes any rows that predate the index.
+ * `plain_text` changes, so frequent position/size updates cost nothing.
+ *
+ * The expensive full `rebuild` (re-tokenising every note) runs only when the
+ * index is first created — once the triggers exist they keep it in sync, so
+ * rebuilding on every launch would just re-do the same work at startup.
  */
 function createFtsIndex() {
+  const existed = !!db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'notes_fts'")
+    .get()
+
   db.exec(`
     CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
       plain_text,
@@ -279,7 +289,9 @@ function createFtsIndex() {
       INSERT INTO notes_fts(rowid, plain_text) VALUES (new.id, new.plain_text);
     END;
   `)
-  db.exec("INSERT INTO notes_fts(notes_fts) VALUES ('rebuild')")
+
+  // Index rows that predate the freshly created table (first run / upgrades).
+  if (!existed) db.exec("INSERT INTO notes_fts(notes_fts) VALUES ('rebuild')")
 }
 
 /** Seeds the default (localized) profile and its first category on a fresh database. */

@@ -260,43 +260,96 @@ export function unarchiveNote(id) {
   getDb().prepare('UPDATE notes SET archived_at = NULL WHERE id = ?').run(id)
 }
 
-/** Whitelist of note columns that {@link updateNote} is allowed to write. */
-const UPDATABLE = new Set([
-  'notebook_id',
-  'content',
-  'plain_text',
-  'color',
-  'opacity',
-  'font_size',
-  'always_on_top',
-  'locked',
-  'starred',
-  'collapsed',
-  'hidden',
-  'x',
-  'y',
-  'width',
-  'height'
-])
+/** Coerces to a string, or undefined (dropped) for non-strings. */
+const asString = (v) => (typeof v === 'string' ? v : undefined)
+
+/** Coerces to a finite integer, or undefined (dropped). */
+const asInt = (v) => (Number.isInteger(v) ? v : undefined)
+
+/** Like {@link asInt}, but null is allowed (clears the column). */
+const asIntOrNull = (v) => (v === null ? null : asInt(v))
+
+/** Coerces any truthy/falsy value to the 0/1 SQLite boolean convention. */
+const asBool01 = (v) => (v ? 1 : 0)
+
+/** Coerces to an opacity in [0.1, 1], or undefined (dropped). */
+const asOpacity = (v) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? Math.min(1, Math.max(0.1, n)) : undefined
+}
 
 /**
- * Updates only the whitelisted fields of a note (unknown keys are ignored,
- * which also guards against writing arbitrary columns). When the content
- * changes, the previous content is snapshotted into the version history.
+ * Per-column sanitisers for {@link updateNote}. Doubles as the write whitelist:
+ * a key absent here is ignored entirely, and a value its sanitiser rejects
+ * (returns undefined) is dropped — IPC input can never write an arbitrary
+ * column or a malformed value.
+ * @type {Record<string, (v: *) => *>}
+ */
+const FIELD_SANITIZERS = {
+  notebook_id: asIntOrNull,
+  content: asString,
+  plain_text: asString,
+  color: asString,
+  opacity: asOpacity,
+  font_size: asInt,
+  always_on_top: asBool01,
+  locked: asBool01,
+  starred: asBool01,
+  collapsed: asBool01,
+  hidden: asBool01,
+  x: asIntOrNull,
+  y: asIntOrNull,
+  width: asInt,
+  height: asInt
+}
+
+/**
+ * Updates only the whitelisted, type-validated fields of a note (unknown keys
+ * and malformed values are ignored). When the content changes, the previous
+ * content is snapshotted into the version history.
  * @param {number} id - Note id.
  * @param {object} fields - Partial fields to write.
  * @returns {object} The updated note.
  */
 export function updateNote(id, fields) {
   const db = getDb()
-  const keys = Object.keys(fields).filter((k) => UPDATABLE.has(k))
+  const payload = { id, updated_at: Date.now() }
+  const keys = []
+  for (const [key, value] of Object.entries(fields || {})) {
+    const sanitize = FIELD_SANITIZERS[key]
+    if (!sanitize || value === undefined) continue
+    const clean = sanitize(value)
+    if (clean === undefined) continue
+    payload[key] = clean
+    keys.push(key)
+  }
   if (keys.length === 0) return getNote(id)
   if (keys.includes('content')) captureNoteVersion(id)
   const setClause = keys.map((k) => `${k} = @${k}`).join(', ')
-  const payload = { id, updated_at: Date.now() }
-  for (const k of keys) payload[k] = fields[k]
   db.prepare(`UPDATE notes SET ${setClause}, updated_at = @updated_at WHERE id = @id`).run(payload)
   return getNote(id)
+}
+
+/**
+ * Persists a note window's bounds without touching `updated_at` — moving or
+ * resizing a window is not a content edit and must not reorder the Explorer's
+ * "recently updated" sort or the version history.
+ * @param {number} id - Note id.
+ * @param {{x?: number|null, y?: number|null, width?: number, height?: number}} bounds - Fields to write.
+ */
+export function updateNoteBounds(id, bounds) {
+  const payload = { id }
+  const keys = []
+  for (const key of ['x', 'y', 'width', 'height']) {
+    if (!bounds || !(key in bounds)) continue
+    const clean = FIELD_SANITIZERS[key](bounds[key])
+    if (clean === undefined) continue
+    payload[key] = clean
+    keys.push(key)
+  }
+  if (!keys.length) return
+  const setClause = keys.map((k) => `${k} = @${k}`).join(', ')
+  getDb().prepare(`UPDATE notes SET ${setClause} WHERE id = @id`).run(payload)
 }
 
 // ---------------------------------------------------------------------------
@@ -310,11 +363,20 @@ const VERSION_THROTTLE_MS = 90 * 1000
 const MAX_VERSIONS_PER_NOTE = 30
 
 /**
+ * Contents larger than this (in UTF-16 code units, ≈ bytes for ASCII) are not
+ * snapshotted. Embedded base64 images can push a note into the megabytes; 30
+ * retained copies of such a note would bloat the database far faster than the
+ * value the history provides. A deliberate durability/size trade-off.
+ */
+const MAX_VERSION_CONTENT_LENGTH = 1_000_000
+
+/**
  * Snapshots a note's *current* (about-to-be-replaced) content into the version
  * history, then prunes to {@link MAX_VERSIONS_PER_NOTE}. Skips the snapshot when
- * the content is unchanged from the last version or when the previous snapshot
- * is more recent than {@link VERSION_THROTTLE_MS}, so a burst of autosaves
- * produces at most one periodic history entry.
+ * the content is unchanged from the last version, when the previous snapshot
+ * is more recent than {@link VERSION_THROTTLE_MS} (so a burst of autosaves
+ * produces at most one periodic history entry), or when the content exceeds
+ * {@link MAX_VERSION_CONTENT_LENGTH}.
  * @param {number} noteId - Note whose current content should be preserved.
  * @param {boolean} [force] - Bypass the time throttle (still dedups identical content).
  */
@@ -322,6 +384,7 @@ function captureNoteVersion(noteId, force = false) {
   const db = getDb()
   const cur = db.prepare('SELECT content, plain_text FROM notes WHERE id = ?').get(noteId)
   if (!cur) return
+  if (cur.content.length > MAX_VERSION_CONTENT_LENGTH) return
   const last = db
     .prepare(
       'SELECT content, created_at FROM note_versions WHERE note_id = ? ORDER BY id DESC LIMIT 1'
@@ -445,6 +508,30 @@ export function mergeNotes(ids) {
 }
 
 /**
+ * Applies one action to many notes inside a single transaction, so a bulk
+ * operation commits once instead of once per note.
+ * @param {number[]} ids - Target note ids.
+ * @param {'trash'|'archive'|'tag'|'color'|'category'|'star'} action - Action name.
+ * @param {*} [value] - Action argument (tag id, color, category id, star flag).
+ * @returns {{count: number}} Number of notes processed.
+ */
+export function bulkNoteAction(ids, action, value) {
+  if (!Array.isArray(ids) || !ids.length) return { count: 0 }
+  const tx = getDb().transaction(() => {
+    for (const id of ids) {
+      if (action === 'trash') trashNote(id)
+      else if (action === 'archive') archiveNote(id)
+      else if (action === 'tag') addTagToNote(id, value)
+      else if (action === 'color') updateNote(id, { color: value })
+      else if (action === 'category') updateNote(id, { notebook_id: value })
+      else if (action === 'star') updateNote(id, { starred: value ? 1 : 0 })
+    }
+  })
+  tx()
+  return { count: ids.length }
+}
+
+/**
  * Duplicates a note, offsetting the copy slightly so it does not fully overlap.
  * @param {number} id - Source note id.
  * @returns {object|null} The new note, or null if the source is missing.
@@ -467,8 +554,16 @@ export function duplicateNote(id) {
 }
 
 /**
- * Searches note text (via the FTS5 index) and tag names in the active profile.
- * Falls back to a LIKE scan if the FTS index is unavailable in this SQLite build.
+ * Maximum rows a text search returns. Search exists to *find* notes, not to
+ * enumerate them; capping the result bounds the IPC payload (each row carries
+ * the full note content) for pathological queries on large databases.
+ */
+const SEARCH_LIMIT = 200
+
+/**
+ * Searches note text (via the FTS5 index) and tag names in the active profile,
+ * capped at {@link SEARCH_LIMIT} rows. Falls back to a LIKE scan if the FTS
+ * index is unavailable in this SQLite build.
  * @param {string} query - Search term.
  * @returns {object[]} Matching notes with tags, most-recently-updated first.
  */
@@ -508,7 +603,7 @@ export function searchNotes(query) {
              LEFT JOIN tags t ON t.id = nt.tag_id
             WHERE n.profile_id = ? AND n.deleted_at IS NULL AND n.archived_at IS NULL
               AND (n.plain_text LIKE ? OR t.name LIKE ?)
-            ORDER BY n.updated_at DESC`
+            ORDER BY n.updated_at DESC LIMIT ${SEARCH_LIMIT}`
         )
         .all(currentProfileId, like, like)
     )
@@ -519,7 +614,10 @@ export function searchNotes(query) {
   const placeholders = ordered.map(() => '?').join(',')
   return attachTags(
     db
-      .prepare(`SELECT * FROM notes WHERE id IN (${placeholders}) ORDER BY updated_at DESC`)
+      .prepare(
+        `SELECT * FROM notes WHERE id IN (${placeholders})
+          ORDER BY updated_at DESC LIMIT ${SEARCH_LIMIT}`
+      )
       .all(...ordered)
   )
 }

@@ -48,8 +48,11 @@ onMounted(() => {
       handleDrop: (_view, event) => handleImageTransfer(event.dataTransfer)
     },
     onUpdate: ({ editor }) => {
-      emit('update:modelValue', editor.getHTML())
-      emit('change', { html: editor.getHTML(), text: editor.getText() })
+      // Serialise the document once per edit — getHTML/getText walk the whole
+      // document, which matters on large notes at typing speed.
+      const html = editor.getHTML()
+      emit('update:modelValue', html)
+      emit('change', { html, text: editor.getText() })
     }
   })
   emit('ready', editor.value)
@@ -62,7 +65,11 @@ watch(
   (v) => editor.value?.setEditable(v)
 )
 
-/** Update content from outside (e.g. after a merge); preserves the cursor. */
+/**
+ * Replaces the document from outside (e.g. after a merge or version restore)
+ * without emitting an update. Note: the selection resets to the document start.
+ * @param {string} html - New note HTML.
+ */
 function setContentFromOutside(html) {
   const ed = editor.value
   if (ed && html !== ed.getHTML()) {

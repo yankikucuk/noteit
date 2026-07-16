@@ -77,6 +77,16 @@ function applyUpdate(fields) {
   window.api.notes.update(noteId, fields)
 }
 
+/**
+ * Live opacity preview while the slider is dragged — updates the window
+ * directly without a database write; the slider's release persists the value.
+ * @param {number} value - Opacity in (0, 1].
+ */
+function previewOpacity(value) {
+  note.opacity = value // keep the % label in sync
+  window.api.notes.previewOpacity(noteId, value)
+}
+
 function onAction(action) {
   if (action === 'alarm' || action === 'history' || action === 'pomodoro') {
     window.api.options.action(action, noteId)
@@ -116,6 +126,7 @@ function onAction(action) {
       :note="note"
       :has-alarm="hasAlarm"
       @update="applyUpdate"
+      @preview-opacity="previewOpacity"
       @action="onAction"
       @close="close"
     />

@@ -117,6 +117,46 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
     expect(repo.getNote(note.id)).toBeUndefined()
   })
 
+  it('drops malformed field values instead of writing them', () => {
+    const note = repo.createNote({})
+    const updated = repo.updateNote(note.id, {
+      opacity: 'not-a-number',
+      font_size: 'huge',
+      color: 42,
+      starred: 'yes' // truthy → 1 via the boolean coercion
+    })
+    expect(updated.opacity).toBe(1) // unchanged default
+    expect(updated.font_size).toBe(14) // unchanged default
+    expect(updated.color).toBe('yellow') // unchanged default
+    expect(updated.starred).toBe(1)
+  })
+
+  it('clamps opacity into its valid range', () => {
+    const note = repo.createNote({})
+    expect(repo.updateNote(note.id, { opacity: 7 }).opacity).toBe(1)
+    expect(repo.updateNote(note.id, { opacity: 0 }).opacity).toBe(0.1)
+  })
+
+  it('persists bounds without bumping updated_at', () => {
+    const note = repo.createNote({})
+    const before = repo.getNote(note.id).updated_at
+    repo.updateNoteBounds(note.id, { x: 50, y: 60, width: 300, height: 200 })
+    const after = repo.getNote(note.id)
+    expect(after).toMatchObject({ x: 50, y: 60, width: 300, height: 200 })
+    expect(after.updated_at).toBe(before)
+  })
+
+  it('applies a bulk action to every note in one transaction', () => {
+    const a = repo.createNote({})
+    const b = repo.createNote({})
+    const { count } = repo.bulkNoteAction([a.id, b.id], 'star', true)
+    expect(count).toBe(2)
+    expect(repo.getNote(a.id).starred).toBe(1)
+    expect(repo.getNote(b.id).starred).toBe(1)
+    expect(repo.bulkNoteAction([], 'star', true).count).toBe(0)
+    expect(repo.bulkNoteAction('nope', 'star', true).count).toBe(0)
+  })
+
   it('restore returns an archived+trashed note fully to the active list', () => {
     const note = repo.createNote({ plain_text: 'both' })
     repo.archiveNote(note.id)
@@ -200,6 +240,13 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       const texts = repo.listNoteVersions(note.id).map((v) => v.plain_text)
       expect(texts).toContain('c')
       expect(texts).toHaveLength(2)
+    })
+
+    it('skips snapshots for oversized content (embedded-image bloat guard)', () => {
+      const huge = `<p>${'x'.repeat(1_100_000)}</p>`
+      const note = repo.createNote({ content: huge, plain_text: 'huge' })
+      repo.updateNote(note.id, { content: '<p>small</p>', plain_text: 'small' })
+      expect(repo.listNoteVersions(note.id)).toHaveLength(0) // huge content not archived
     })
   })
 
