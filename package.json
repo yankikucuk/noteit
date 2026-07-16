@@ -1,6 +1,6 @@
 {
   "name": "noteit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NoteIt — cross-platform sticky notes desktop app (Electron + Vue + SQLite)",
   "main": "./out/main/index.js",
   "author": "noteit",
