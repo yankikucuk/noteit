@@ -15,28 +15,38 @@ Built with **Electron + Vue 3 + better-sqlite3 + TipTap**. Runs on macOS
 - **Frameless sticky notes** — one window per note, draggable, with edge-snapping
   and title-bar alignment; positions persist across restarts.
 - **Rich text** (TipTap): bold/italic/underline/strike, lists, **checklists**,
-  highlight, links, **inline code & code blocks, images and tables**. Formatting
-  menu appears on right-click.
-- **Appearance** — 10 color themes, adjustable opacity, always-on-top, roll-up to
-  the title bar.
+  highlight, links, **inline code & syntax-highlighted code blocks, images and
+  tables**. Formatting menu appears on right-click.
+- **Appearance** — light/dark/system **theme**, 10 preset + **custom note
+  colors**, adjustable opacity (live preview), always-on-top, roll-up to the
+  title bar, optional dimming of unfocused notes.
 - **Organization** — Explorer window with **full-text search (SQLite FTS5)**,
-  sorting, **categories** and **colored tags**; trash with restore. The note list
-  renders incrementally so large collections stay responsive.
+  sorting, **categories**, **colored tags**, **saved filter presets**, an
+  **archive**, multi-select **bulk actions** and trash with restore. The note
+  list renders incrementally so large collections stay responsive.
+- **Command palette** (Cmd/Ctrl+K) — quick actions plus note search, including
+  **global search across unprotected profiles**.
 - **Version history** — each note keeps periodic content snapshots; restore any
   earlier version (the restore is itself reversible).
 - **Profiles** — isolated workspaces, each with its own notes/categories/tags,
-  optional password lock.
-- **Reminders** — per-note alarms with repeat modes; missed alarms fire on wake
-  from sleep.
+  optional password lock and **idle auto-lock**.
+- **Reminders** — per-note alarms with preset and **custom repeat rules** (every
+  N days, chosen weekdays), **snooze**, an **agenda** of upcoming reminders, and
+  cross-profile notifications; missed alarms fire on wake from sleep.
+- **Focus timer** — a per-note pomodoro (25/5) with pause/stop.
 - **Locking** — lock a note's content, position and size (individually or all at
   once).
+- **Sharing & output** — export a note as TXT/MD/RTF/HTML/PDF/PNG, print it,
+  copy it as Markdown, or copy a **`noteit://` deep link**; import Markdown
+  files as notes.
 - **Backup & data portability** — manual and automatic daily backups (restore is
-  validated before it overwrites your data); import/export all notes as portable
-  JSON.
+  validated before it overwrites your data); import/export all notes — including
+  archive state and reminders — as portable JSON (imported HTML is sanitised).
 - **Internationalization** — Turkish and English dictionaries with a live language
   switch; adding a language is a single dictionary file.
-- **System integration** — tray icon, global shortcuts (with conflict detection),
-  launch at login, auto-update (with a restart prompt), local crash reporting.
+- **System integration** — tray icon, configurable global shortcuts (with
+  conflict detection), `noteit://` URL scheme, launch at login, auto-update
+  (with a restart prompt), local crash reporting.
 
 ## Development
 
@@ -64,8 +74,9 @@ which rebuilds it for Node. To run it locally: `npm rebuild better-sqlite3 &&
 npm test`, then `npm run postinstall` to restore the Electron build.
 
 Testable business logic lives in dependency-free modules under `src/shared/`
-(`recurrence.js`, `exportFormat.js`, `search.js`) so it can be unit-tested
-without pulling in Electron or the native database.
+(`recurrence.js`, `exportFormat.js`, `search.js`, `deepLink.js`,
+`sanitizeHtml.js`) so it can be unit-tested without pulling in Electron or the
+native database.
 
 Continuous integration (`.github/workflows/ci.yml`) runs lint and the full test
 suite (with better-sqlite3 rebuilt for Node), then builds the bundle on macOS,
