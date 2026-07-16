@@ -3,7 +3,47 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.1] - 2026-07-16
+
+### Added
+
+- Command palette (Cmd/Ctrl+K) for quick actions and note search.
+- Cross-profile global search from the command palette; password-protected
+  profiles are excluded.
+- Saved filters: store a category/tag/sort combination as a one-click preset.
+- Note archive and multi-select bulk actions (categorize, star, archive, trash).
+- Reminder snooze (10 minutes / 1 hour / tomorrow) when a reminder fires.
+- Agenda of upcoming reminders in the Explorer, with overdue/today/tomorrow
+  labels and a pending count.
+- Custom reminder repeat rules: every N days, or on selected weekdays.
+- `noteit://` URL scheme for deep links (`note/<id>`, `new`, `explorer`) and a
+  "copy link" action; note links resolve only within the active profile.
+- Idle auto-lock for password-protected profiles (off / 5 / 15 / 30 minutes).
+- Per-note pomodoro focus timer (25/5) with pause and stop.
+- Note output: copy as Markdown, export PNG/PDF, print, and Markdown import.
+- Appearance: light/dark/system theme, custom note colors, and an option to dim
+  unfocused note windows.
+- Configurable global shortcuts; new notes open on the active display.
+- Deletable tags and categories, and custom in-app dialogs replacing the native
+  prompt/confirm.
+
+### Changed
+
+- Explorer search and the command palette debounce their queries, issuing one
+  lookup per pause instead of a round-trip per keystroke; the palette runs its
+  two searches in parallel and ignores out-of-order results.
+
+### Security
+
+- Global search never surfaces notes from password-protected profiles, and
+  `noteit://` note links cannot reach a locked profile.
+
+### Infrastructure
+
+- 64-bit-only builds with a native Windows arm64 target; Node 26 pinned; the
+  release workflow merges multi-arch Windows update metadata.
+
+## [1.0.0] - 2026-07-14
 
 ### Added
 
