@@ -77,7 +77,10 @@ jobs:
           path: artifacts # one subdirectory per platform (metadata kept separate)
       - name: Merge Windows update metadata and stage assets
         run: |
-          npm i js-yaml@^4.1.0 --no-save --no-audit --no-fund
+          # --legacy-peer-deps: the project pins vite 8 while electron-vite 5
+          # still declares a vite <8 peer range, so a plain install errors on the
+          # peer conflict (the build jobs use the same flag).
+          npm i js-yaml@^4.1.0 --no-save --no-audit --no-fund --legacy-peer-deps
           node scripts/merge-release.mjs artifacts staging
       - name: Publish release with installers
         uses: softprops/action-gh-release@v2
