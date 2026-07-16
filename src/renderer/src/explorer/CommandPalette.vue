@@ -146,8 +146,14 @@ async function runItem(item) {
   if (item.type === 'command') {
     item.command.run()
   } else if (item.type === 'global') {
-    // Jump across profiles: switch to the note's (unprotected) profile, then open.
-    await window.api.profiles.switch(item.note.profile_id)
+    // Jump across profiles: switch to the note's (unprotected) profile, then
+    // open. The switch can fail (e.g. the profile gained a password since the
+    // search ran) — never open a note outside the active profile.
+    const r = await window.api.profiles.switch(item.note.profile_id)
+    if (!r?.ok) {
+      pushToast(t('profile.switchFailed'), 'error')
+      return
+    }
     window.api.notes.open(item.note.id)
   } else {
     window.api.notes.open(item.note.id)

@@ -36,6 +36,7 @@ import { refreshTrayMenu } from './tray.js'
 import { buildApplicationMenu } from './menu.js'
 import { checkForUpdatesManually } from './updater.js'
 import { htmlToPlainText, plainTextToRtf, htmlToMarkdown } from '../shared/exportFormat.js'
+import { sanitizeHtml } from '../shared/sanitizeHtml.js'
 import { printNote, noteToPdf } from './printing.js'
 import { applyGlobalShortcuts } from './shortcuts.js'
 import { noteLink } from './protocol.js'
@@ -108,10 +109,17 @@ export function registerIpc() {
     return true
   })
 
-  handle('profile:set-password', (_e, id, newPassword) => {
+  // Changing or removing a profile's password requires the current password —
+  // otherwise any user of the app could strip another profile's access lock.
+  handle('profile:set-password', (_e, id, currentPassword, newPassword) => {
+    const profile = repo.getProfile(id)
+    if (!profile) return { ok: false, error: 'not-found' }
+    if (profile.password_hash && !verifyPassword(currentPassword || '', profile.password_hash)) {
+      return { ok: false, error: 'wrong-password' }
+    }
     repo.setProfilePasswordHash(id, newPassword ? hashPassword(newPassword) : null)
     refreshExplorer()
-    return true
+    return { ok: true }
   })
 
   handle('profile:switch', (_e, id, password) => {
@@ -164,7 +172,11 @@ export function registerIpc() {
     return note
   })
 
+  // Opening is restricted to the active profile so a note in another (possibly
+  // locked) profile can never be surfaced by id — mirrors the deep-link guard.
   handle('note:open', (_e, id) => {
+    const note = repo.getNote(id)
+    if (!note || note.profile_id !== repo.getCurrentProfileId()) return false
     openNote(id)
     return true
   })
@@ -592,7 +604,8 @@ export function registerIpc() {
     let imported = 0
     for (const fp of filePaths) {
       try {
-        const html = marked.parse(readFileSync(fp, 'utf8'), { async: false })
+        // marked does not sanitise its HTML output; the file is untrusted input.
+        const html = sanitizeHtml(marked.parse(readFileSync(fp, 'utf8'), { async: false }))
         repo.createNote({ content: html, plain_text: htmlToPlainText(html), hidden: 1 })
         imported++
       } catch (err) {

@@ -227,6 +227,25 @@ describe.skipIf(!dbAvailable)('database + repository (integration)', () => {
       expect(repo.importNotesData({}).imported).toBe(0)
       expect(repo.importNotesData(null).imported).toBe(0)
     })
+
+    it('sanitises imported note HTML (script, handlers, javascript: URLs)', () => {
+      repo.importNotesData({
+        notes: [
+          {
+            content:
+              '<p>ok</p><script>alert(1)</script>' +
+              '<img src="x.png" onerror="steal()">' +
+              '<a href="javascript:evil()">link</a>',
+            plain_text: 'ok'
+          }
+        ]
+      })
+      const [note] = repo.getActiveNotes()
+      expect(note.content).toContain('<p>ok</p>')
+      expect(note.content).not.toContain('<script>')
+      expect(note.content).not.toContain('onerror')
+      expect(note.content).not.toContain('javascript:')
+    })
   })
 
   describe('profiles', () => {

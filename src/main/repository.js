@@ -10,6 +10,7 @@
 import { getDb } from './database.js'
 import { t } from './i18n.js'
 import { toFtsQuery } from '../shared/search.js'
+import { sanitizeHtml } from '../shared/sanitizeHtml.js'
 
 /** Active profile id; all scoped queries filter by this. */
 let currentProfileId = 1
@@ -821,9 +822,10 @@ export function exportProfileData() {
 
 /**
  * Imports notes from an exported JSON structure into the active profile,
- * creating any missing categories and tags by name. Imported notes start hidden
- * so they populate the Explorer without flooding the desktop. The whole import
- * runs in one transaction.
+ * creating any missing categories and tags by name. Note HTML is sanitised on
+ * the way in (the file is untrusted input). Imported notes start hidden so they
+ * populate the Explorer without flooding the desktop. The whole import runs in
+ * one transaction.
  * @param {object} data - Parsed export payload (see {@link exportProfileData}).
  * @returns {{imported: number}} Number of notes imported.
  */
@@ -836,7 +838,7 @@ export function importNotesData(data) {
       if (!raw || typeof raw !== 'object') continue
       const note = createNote({
         notebook_id: raw.category ? resolveOrCreateNotebook(raw.category) : getDefaultNotebookId(),
-        content: typeof raw.content === 'string' ? raw.content : '',
+        content: typeof raw.content === 'string' ? sanitizeHtml(raw.content) : '',
         plain_text: typeof raw.plain_text === 'string' ? raw.plain_text : '',
         color: typeof raw.color === 'string' ? raw.color : 'yellow',
         opacity: typeof raw.opacity === 'number' ? raw.opacity : 1.0,

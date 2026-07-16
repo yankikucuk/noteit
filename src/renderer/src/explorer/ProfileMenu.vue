@@ -22,7 +22,11 @@ const error = ref('')
 const newName = ref('')
 const newPassword = ref('')
 const unlockPassword = ref('')
-const pwInput = ref('')
+
+// Settings view: `currentPw` authorises password changes and deletion of a
+// protected profile; `newPw` is the password to set (empty removes the lock).
+const currentPw = ref('')
+const newPw = ref('')
 
 async function load() {
   profiles.value = await window.api.profiles.list()
@@ -71,7 +75,8 @@ async function createProfile() {
 
 function openSettings(p) {
   target.value = p
-  pwInput.value = ''
+  currentPw.value = ''
+  newPw.value = ''
   error.value = ''
   view.value = 'settings'
 }
@@ -85,9 +90,24 @@ async function renameProfile() {
   }
 }
 
+/**
+ * Sets, changes, or removes the profile's password. A protected profile
+ * requires its current password; an empty new password removes the lock.
+ */
 async function saveProfilePassword() {
-  await window.api.profiles.setPassword(target.value.id, pwInput.value || null)
-  pwInput.value = ''
+  error.value = ''
+  const r = await window.api.profiles.setPassword(
+    target.value.id,
+    currentPw.value,
+    newPw.value || null
+  )
+  if (!r.ok) {
+    error.value =
+      r.error === 'wrong-password' ? t('profile.wrongPassword') : t('profile.saveFailed')
+    return
+  }
+  currentPw.value = ''
+  newPw.value = ''
   await load()
   view.value = 'list'
 }
@@ -103,7 +123,7 @@ async function deleteProfile() {
     danger: true
   })
   if (!ok) return
-  const r = await window.api.profiles.remove(target.value.id, pwInput.value)
+  const r = await window.api.profiles.remove(target.value.id, currentPw.value)
   if (r.ok) {
     await load()
     view.value = 'list'
@@ -197,12 +217,16 @@ function back() {
         <button class="row-btn" @click="renameProfile">
           <i class="fa-solid fa-pen"></i> {{ t('profile.rename') }}
         </button>
+        <label v-if="target.has_password" class="fld">
+          <span>{{ t('profile.currentPassword') }}</span>
+          <input v-model="currentPw" type="password" :placeholder="t('profile.currentPassword')" />
+        </label>
         <label class="fld">
           <span>{{
             target.has_password ? t('profile.changePassword') : t('profile.setPassword')
           }}</span>
           <input
-            v-model="pwInput"
+            v-model="newPw"
             type="password"
             :placeholder="t('profile.newPasswordPlaceholder')"
           />

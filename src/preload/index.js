@@ -67,7 +67,8 @@ const api = {
     current: () => ipcRenderer.invoke('profile:current'),
     create: (name, password) => ipcRenderer.invoke('profile:create', name, password),
     rename: (id, name) => ipcRenderer.invoke('profile:rename', id, name),
-    setPassword: (id, newPassword) => ipcRenderer.invoke('profile:set-password', id, newPassword),
+    setPassword: (id, currentPassword, newPassword) =>
+      ipcRenderer.invoke('profile:set-password', id, currentPassword, newPassword),
     switch: (id, password) => ipcRenderer.invoke('profile:switch', id, password),
     remove: (id, password) => ipcRenderer.invoke('profile:delete', id, password)
   },
